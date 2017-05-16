@@ -1,0 +1,11 @@
+server:
+  port: 8081
+spring:
+  cloud:
+    stream:
+      bindings:
+        input:
+          destination: kafka-gemfire-output
+          consumer:
+            header-mode: raw
+          group: kafka-subscriber
