@@ -8,7 +8,7 @@
     <version>0.0.1-SNAPSHOT</version>
   </parent>
  
-  <artifactId>gemfire-transfer-cachewriter</artifactId>
+  <artifactId>gemfire-transfer-cachelistener</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>gemfire-transfer-cachewriter</name>
   <url>http://maven.apache.org</url>
