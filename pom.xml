@@ -1,29 +1,48 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>1.5.3.RELEASE</version>
-  </parent>
-  <groupId>com.garmin.gemfire.transfer</groupId>
-  <artifactId>gemfire-transfer-parent</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <packaging>pom</packaging>
-  <name>gemfire-transfer-parent</name>
-  <description>parent class to store modules</description>
-<dependencyManagement>
-  <dependencies>
-	<dependency>
-	  <groupId>com.garmin.gemfire.transfer</groupId>
-		<artifactId>gemfire-transfer-commons</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
-	</dependency>
-  </dependencies>
-  </dependencyManagement>
-  <modules>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>1.5.3.RELEASE</version>
+	</parent>
+	<groupId>com.garmin.gemfire.transfer</groupId>
+	<artifactId>gemfire-transfer-parent</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>gemfire-transfer-parent</name>
+	<description>parent class to store modules</description>
+	
+	<properties>
+		<spring-data-geode.version>1.9.3.RELEASE</spring-data-geode.version>
+	</properties>
+	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.garmin.gemfire.transfer</groupId>
+				<artifactId>gemfire-transfer-commons</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.garmin.gemfire.transfer</groupId>
+				<artifactId>spring-cloud-gemfire-support</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.data</groupId>
+				<artifactId>spring-data-geode</artifactId>
+				<version>${spring-data-geode.version}</version>
+			</dependency>
+			
+			
+		</dependencies>
+	</dependencyManagement>
+	<modules>
 		<module>gemfire-changes-subscriber</module>
 		<module>gemfire-transfer-commons</module>
 		<module>gemfire-client</module>
 		<module>gemfire-transfer-cachelistener</module>
+		<module>spring-cloud-gemfire-support</module>
 	</modules>
 </project>

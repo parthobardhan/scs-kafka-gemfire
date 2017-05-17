@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gfe="http://www.springframework.org/schema/gemfire"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/gemfire http://www.springframework.org/schema/gemfire/spring-gemfire.xsd
+	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<gfe:client-region id="customer" shortcut="LOCAL" />
+
+	<gfe:pool id="yellowCluster" subscription-enabled="true">
+		<gfe:locator host="10.5.154.250" port="10334" />
+		<gfe:locator host="10.5.154.91" port="10334" />
+	</gfe:pool>
+
+
+	<bean id="autoPdxSerializer" class="com.gemstone.gemfire.pdx.ReflectionBasedAutoSerializer">
+		<property name="serializableClasses">
+			<util:list value-type="java.lang.String">
+				<value>.*</value>
+			</util:list>
+		</property>
+	</bean>
+
+</beans>

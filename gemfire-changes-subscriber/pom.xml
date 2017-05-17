@@ -10,10 +10,10 @@
 	<description>Demo project for Spring Boot</description>
 
 	<parent>
-    <groupId>com.garmin.gemfire.transfer</groupId>
-    <artifactId>gemfire-transfer-parent</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-  </parent>
+		<groupId>com.garmin.gemfire.transfer</groupId>
+		<artifactId>gemfire-transfer-parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -53,24 +53,25 @@
 			<artifactId>spring-cloud-starter-stream-kafka</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-stream-binder-kafka</artifactId>
+			<groupId>com.garmin.gemfire.transfer</groupId>
+			<artifactId>spring-cloud-gemfire-support</artifactId>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.mockito/mockito-all -->
 		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<version>1.10.19</version>
+			<groupId>com.garmin.gemfire.transfer</groupId>
+			<artifactId>gemfire-transfer-commons</artifactId>
 		</dependency>
-<dependency>
-<groupId>com.garmin.gemfire.transfer</groupId>
-<artifactId>gemfire-transfer-commons</artifactId>
-</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-stream-test-support</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 
@@ -82,6 +83,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
-
 </project>
