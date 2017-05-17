@@ -1,0 +1,15 @@
+<!DOCTYPE client-cache PUBLIC
+  "-//GemStone Systems, Inc.//GemFire Declarative Caching 6.5//EN"
+  "http://www.gemstone.com/dtd/cache6_5.dtd">
+<client-cache>
+
+    <!--  GCP gemfire for GM demo -->
+    <pool name="gem8Cluster">
+  		<locator host="Olaxdd-itwgfblue00" port="10334"/>
+	  	<locator host="Olaxdd-itwgfblue01" port="10334"/>
+  </pool>	
+    
+  	<region name="customer" refid="PROXY"/>
+  	
+	  
+</client-cache>

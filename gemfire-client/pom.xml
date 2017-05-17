@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.garmin.gemfire.transfer</groupId>
+    <artifactId>gemfire-transfer-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <groupId>com.garmin.gemfire.transfer</groupId>
+  <artifactId>gemfire-client</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>gemfire-client</name>
+  <url>http://maven.apache.org</url>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  <dependencies>
+  
+   <dependency>
+      <groupId>com.garmin.gemfire.transfer</groupId>
+      <artifactId>gemfire-transfer-commons</artifactId>
+    </dependency>
+    
+    <dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter</artifactId>
+	</dependency>
+	
+	
+    <dependency>
+		<groupId>com.gemstone.gemfire</groupId>
+		<artifactId>gemfire</artifactId>
+		<version>8.2.0</version>
+	</dependency>
+	
+	 <dependency>
+		<groupId>com.garmin.data</groupId>
+		<artifactId>gemFireDomain</artifactId>
+		<version>1.13.0-SNAPSHOT</version>
+	</dependency>	
+	
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
