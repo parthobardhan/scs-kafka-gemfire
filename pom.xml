@@ -24,6 +24,6 @@
 		<module>gemfire-changes-subscriber</module>
 		<module>gemfire-transfer-commons</module>
 		<module>gemfire-client</module>
-		<module>gemfire-transfer-cachewriter</module>
+		<module>gemfire-transfer-cachelistener</module>
 	</modules>
 </project>
