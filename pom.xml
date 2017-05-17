@@ -23,5 +23,6 @@
   <modules>
 		<module>gemfire-changes-subscriber</module>
 		<module>gemfire-transfer-commons</module>
+		<module>gemfire-client</module>
 	</modules>
 </project>
