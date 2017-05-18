@@ -7,6 +7,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.garmin.gemfire.transfer.model.Customer;
 import com.garmin.server.gemfire.util.JSONTypedFormatter;
 import com.gemstone.gemfire.cache.Declarable;
@@ -14,6 +15,8 @@ import com.gemstone.gemfire.cache.EntryEvent;
 import com.gemstone.gemfire.cache.util.CacheListenerAdapter;
 import com.gemstone.gemfire.pdx.JSONFormatter;
 import com.gemstone.gemfire.pdx.PdxInstance;
+
+
 
 public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 
@@ -36,22 +39,22 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 	}
 
 	private void captureEvent(EntryEvent event) {
+		// auto.create.topics.enable to create topics 
 		
 		String region= event.getRegion().getName();
-		String operation=event.getOperation().toString();
-		String jsonTransport = JSONTypedFormatter.toJsonTransport(event.getKey().toString(), event.getNewValue(), event.getOperation().toString(), event.getRegion().getName()); 
-		Object newObj=event.getNewValue();
-		sendToKafka(jsonTransport,"gemtesttopic");		
-			
-		/* JSONFormatter.toJSON(pdxInstance) doesn't work either
-		byte[] byteArray=JSONFormatter.toJSONByteArray(pdxInstance);
-		LOGGER.info("Converted the PDX to JSON byte array :");
-		sendToKafka(byteArray,"gemtesttopic");		
-		*/
+		Long now = System.currentTimeMillis();
+		String jsonTransport;
+		try {
+			jsonTransport = JSONTypedFormatter.toJsonTransport(event.getKey().toString(), event.getNewValue(), event.getOperation().toString(), event.getRegion().getName(),now);
+			sendToKafka("gemtesttopic",jsonTransport);		
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Error while parsing JSON object :"+event.getKey().toString()+", for a region :"+region);
+			e.printStackTrace();
+		} 
 		
 	}
 	
-	private void sendToKafka(byte[] byteArray, String topicName) {
+	private void sendToKafka(String topicName, byte[] byteArray) {
 	    // write to kafka topic
 		// Externalize the properties with bookstrap, acks, block on buffer, retries etc.
 		org.apache.kafka.clients.producer.Producer producer = new KafkaProducer<String, String>(configProperties);
@@ -66,7 +69,7 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 	    }
 	}
 	
-	private void sendToKafka(String message, String topicName) {
+	private void sendToKafka(String topicName, String message) {
 	    // write to kafka topic
 		// Externalize the properties with bookstrap, acks, block on buffer, retries etc.
 		org.apache.kafka.clients.producer.Producer producer = new KafkaProducer<String, String>(configProperties);
