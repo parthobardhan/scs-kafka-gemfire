@@ -1,4 +1,4 @@
-package com.garmin.server.gemfire.util;
+package com.garmin.gemfire.transfer.util;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.gemstone.gemfire.cache.client.ClientCache;
+import com.gemstone.gemfire.pdx.JSONFormatter;
 import com.gemstone.gemfire.pdx.PdxInstance;
 import com.gemstone.gemfire.pdx.PdxInstanceFactory;
 

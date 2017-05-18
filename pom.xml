@@ -12,11 +12,12 @@
 	<packaging>pom</packaging>
 	<name>gemfire-transfer-parent</name>
 	<description>parent class to store modules</description>
-	
+
 	<properties>
-		<spring-data-geode.version>1.9.3.RELEASE</spring-data-geode.version>
+		<spring-data-gemfire.version>1.9.3.RELEASE</spring-data-gemfire.version>
+		<jackson.version>2.8.8</jackson.version>
 	</properties>
-	
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -31,11 +32,17 @@
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.data</groupId>
-				<artifactId>spring-data-geode</artifactId>
-				<version>${spring-data-geode.version}</version>
+				<artifactId>spring-data-gemfire</artifactId>
+				<version>${spring-data-gemfire.version}</version>
 			</dependency>
-			
-			
+
+			<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-core</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
 	<modules>

@@ -1,24 +1,30 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>com.garmin.gemfire.transfer</groupId>
-    <artifactId>gemfire-transfer-parent</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-  </parent>
-  <artifactId>gemfire-transfer-commons</artifactId>
-  <name>gemfire-transfer-commons</name>
-  <description>Common utils to be used by projects</description>
-  <repositories>
-   <repository>
-      <id>gemfire-repository</id>
-      <name>Gemfire Repository</name>
-      <url>http://dist.gemstone.com/maven/release</url>
-   </repository>
-</repositories>
-  <dependencies>
-   <dependency>
-      <groupId>com.gemstone.gemfire</groupId>
-      <artifactId>gemfire</artifactId>
-   </dependency>
-</dependencies>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.garmin.gemfire.transfer</groupId>
+		<artifactId>gemfire-transfer-parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>gemfire-transfer-commons</artifactId>
+	<name>gemfire-transfer-commons</name>
+	<description>Common utils to be used by projects</description>
+	<repositories>
+		<repository>
+			<id>gemfire-repository</id>
+			<name>Gemfire Repository</name>
+			<url>http://dist.gemstone.com/maven/release</url>
+		</repository>
+	</repositories>
+	<dependencies>
+		<dependency>
+			<groupId>com.gemstone.gemfire</groupId>
+			<artifactId>gemfire</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
 </project>
