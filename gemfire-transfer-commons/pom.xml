@@ -22,6 +22,11 @@
 			<artifactId>gemfire</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.garmin.data</groupId>
+			<artifactId>gemFireDomain</artifactId>
+			<version>1.4.0</version>
+		</dependency>		
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<scope>provided</scope>

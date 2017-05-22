@@ -30,6 +30,15 @@ public class JSONTypedFormatter {
 	private static final String TYPE_SUFFIX = "__type";
 
 	
+	/**
+	 * @param key - The key for the object 
+	 * @param obj - The object (This really should be a PDX object, but there are no guarantees.)
+	 * @param operation - The GemFire operation
+	 * @param regionName - The GemFire regionName
+	 * @param timeStamp - Let the client pass this in rather than generate it ourselves.  
+	 * @return
+	 * @throws JsonProcessingException
+	 */
 	public static String toJsonTransport(String key, Object obj, String operation, String regionName, Long timeStamp) throws JsonProcessingException  {
 		String json = "{}";
 		//for a destroy operation, the obj will probably be null
@@ -41,7 +50,8 @@ public class JSONTypedFormatter {
 								   + formatTuple("key", key) + ","
 								   + formatTuple("region", regionName) + ","
 								   + formatTupleNum("timestamp", timeStamp) + ","
-								   + formatSingle("object") + ":" + json + "}";
+								   + formatSingle("object") + ":" + json 
+								   + "}";
 		return jsonTransport;			
 	}
 	
@@ -59,24 +69,32 @@ public class JSONTypedFormatter {
 	 * The trick is that it will also record all the type information in the JSON.  Every field 
 	 * will have a sibling "<field>__type" field that tells us the data type.  
 	 * 
-	 * @param objectName
-	 * @param field
+	 * @param fieldName - The JSON field name
+	 * @param field - The JSON field value (object/string/whatever) 
 	 * @return
 	 * @throws JsonProcessingException
 	 */
-	public static String objectToJsonTuple(String objectName, Object field) throws JsonProcessingException {
-		String objectName__type = objectName + TYPE_SUFFIX;
+	public static String objectToJsonTuple(String fieldName, Object field) throws JsonProcessingException {
+		String fieldNameType = fieldName + TYPE_SUFFIX;
 		
 		StringBuilder json = new StringBuilder();	
 		if (field == null) {
-			return formatTuple(objectName, null);
+			return formatTuple(fieldName, null);
 		}
+
+		if (field instanceof PdxInstance) {
+			PdxInstance pi = (PdxInstance)field;
+			json.append(formatTuple(fieldNameType, field.getClass().getName() + ":" + pi.getClassName()));
+			json.append(",");
+		} else {	
+			json.append(formatTuple(fieldNameType, field.getClass().getName()));			
+			json.append(",");
+		}
+
 		
 		if (field instanceof PdxInstance) {
 			PdxInstance pi = (PdxInstance)field;
-			json.append(formatTuple(objectName__type, field.getClass().getName() + ":" + pi.getClassName()));			
-			json.append(",");
-			json.append(formatSingle(objectName));
+			json.append(formatSingle(fieldName));
 			json.append(":");
 			json.append("{");
 			List<String> childFieldNames = pi.getFieldNames();
@@ -87,9 +105,7 @@ public class JSONTypedFormatter {
 			}
 			json.append("}");
 		} else if (field instanceof Iterable) {
-			json.append(formatTuple(objectName__type, field.getClass().getName()));			
-			json.append(",");
-			json.append(formatSingle(objectName));
+			json.append(formatSingle(fieldName));
 			json.append(":");
 			json.append("[");
 			Iterable iterable = (Iterable) field;
@@ -103,9 +119,7 @@ public class JSONTypedFormatter {
 			}
 			json.append("]");
 		} else if (field instanceof Object[]) {
-			json.append(formatTuple(objectName__type, field.getClass().getName()));			
-			json.append(",");
-			json.append(formatSingle(objectName));
+			json.append(formatSingle(fieldName));
 			json.append(":");
 			json.append("[");
 			Object[] iterable = (Object[]) field;
@@ -119,9 +133,7 @@ public class JSONTypedFormatter {
 			}
 			json.append("]");
 		} else if (field instanceof int[]) {
-			json.append(formatTuple(objectName__type, field.getClass().getName()));			
-			json.append(",");
-			json.append(formatSingle(objectName));
+			json.append(formatSingle(fieldName));
 			json.append(":");
 			json.append("[");
 			int[] iterable = (int[]) field;
@@ -135,9 +147,7 @@ public class JSONTypedFormatter {
 			}
 			json.append("]");													
 		} else if (field instanceof Map) {			
-			json.append(formatTuple(objectName__type, field.getClass().getName()));			
-			json.append(",");
-			json.append(formatSingle(objectName));
+			json.append(formatSingle(fieldName));
 			json.append(":");
 			json.append("{");
 			Map map = (Map) field;
@@ -148,53 +158,23 @@ public class JSONTypedFormatter {
 				if (it.hasNext()) json.append(",");
 			}
 			json.append("}");	
+		} else if (field instanceof Number) {
+			json.append(formatTupleNum(fieldName, (Number)field));
+		} else if (field instanceof Boolean) {
+			json.append(formatTupleBool(fieldName, (Boolean)field));
+		} else if (field instanceof Date) {
+			json.append(formatTuple(fieldName, String.valueOf(((Date)field).getTime())));
+		} else if (field instanceof String) {
+			json.append(formatTuple(fieldName, field.toString()));
+		} else if (field instanceof Locale) {
+			json.append(formatTuple(fieldName, field.toString()));			
 		} else {
-			try {
-				json.append(formatTuple(objectName__type, field.getClass().getName()));			
-				json.append(",");
-				if (field instanceof Number) {
-					json.append(formatTupleNum(objectName, (Number)field));
-				} else if (field instanceof Boolean) {
-					json.append(formatTupleBool(objectName, (Boolean)field));
-				} else if (field instanceof Date) {
-					json.append(formatTuple(objectName, String.valueOf(((Date)field).getTime())));
-				} else if (field instanceof String) {
-					json.append(formatTuple(objectName, field.toString()));
-				} else if (field instanceof Locale) {
-					json.append(formatTuple(objectName, field.toString()));			
-				} else {
-					System.out.println("fieldToJson Unhandled Field Type = " + field.getClass().getName());
-					LOGGER.error("fieldToJson Unhandled Field Type = " + field.getClass().getName());
-				}
-			} catch (JsonProcessingException jpe) {
-				json.append("UNABLE TO CONVERT OBJECT INTO JSON: " + field.getClass().getName());
-				LOGGER.error("JSONTypedFormatter: Unable to convert object into JSON: " + field.getClass().getName());
-			}
+			//TODO: remove system.outs before production.  They are only here because sometimes LOGGER is flakey in Test					
+			System.out.println("fieldToJson Unhandled Field Type = " + field.getClass().getName());
+			LOGGER.error("fieldToJson Unhandled Field Type = " + field.getClass().getName());
 		}
 		
 		return json.toString();
-	}
-	
-	
-	private static String formatTuple(String left, String right) throws JsonProcessingException {
-		if (right == null) return mapper.writeValueAsString(left) + ":" + "null"; 
-		return mapper.writeValueAsString(left) + ":" + mapper.writeValueAsString(right);
-	}
-
-	private static String formatTupleNum(String left, Number right) throws JsonProcessingException {
-		if (right == null) return mapper.writeValueAsString(left) + ":" + "null"; 
-		return mapper.writeValueAsString(left) + ":" + right;
-	}
-	
-	private static String formatTupleBool(String left, Boolean right) throws JsonProcessingException {
-		if (right == null) return mapper.writeValueAsString(left) + ":" + "null"; 
-		return mapper.writeValueAsString(left) + ":" + right;
-	}
-
-	
-	private static String formatSingle(String left) throws JsonProcessingException {
-		if (left == null) return "null";
-		return mapper.writeValueAsString(left);
 	}
 	
 	/**
@@ -291,14 +271,14 @@ public class JSONTypedFormatter {
 				for (JsonNode node : arrayNode) {		
 					for (Iterator<String> nodeFields = node.fieldNames();nodeFields.hasNext();) {
 						String nodeField = nodeFields.next();
-						if (nodeField.endsWith("__type")) continue;
+						if (nodeField.endsWith(TYPE_SUFFIX)) continue;
 						JsonNode ixNode = node.get(nodeField);
 						int ivalue = ixNode.asInt();
 						intArr[Integer.parseInt(nodeField)] = ivalue;
 					}
 				}
 				return intArr;				
-			case "[Ljava.lang.Object;":
+			case "[Ljava.lang.Object;":  //TODO: This hasn't been tested.  I haven't tested an array of objects yet.
 				ArrayNode objArrayNode = (ArrayNode) parentNode.get(fieldName);
 				Object[] objArr = new Object[objArrayNode.size()];
 				int oindex = 0;
@@ -329,9 +309,34 @@ public class JSONTypedFormatter {
 				}
 				return list;
 			default:
+				//TODO: remove system.outs before production.  They are only here because sometimes LOGGER is flakey in Test
 				System.out.println("jsonNodeToObject Unhandled type = " + type);
 				LOGGER.error("jsonNodeToObject Unhandled type = " + type);		
 		}
 		return null;		
-	}	
+	}
+	
+	
+	private static String formatTuple(String left, String right) throws JsonProcessingException {
+		if (right == null) return mapper.writeValueAsString(left) + ":" + "null"; 
+		return mapper.writeValueAsString(left) + ":" + mapper.writeValueAsString(right);
+	}
+
+	private static String formatTupleNum(String left, Number right) throws JsonProcessingException {
+		if (right == null) return mapper.writeValueAsString(left) + ":" + "null"; 
+		return mapper.writeValueAsString(left) + ":" + right;
+	}
+	
+	private static String formatTupleBool(String left, Boolean right) throws JsonProcessingException {
+		if (right == null) return mapper.writeValueAsString(left) + ":" + "null"; 
+		return mapper.writeValueAsString(left) + ":" + right;
+	}
+
+	
+	private static String formatSingle(String left) throws JsonProcessingException {
+		if (left == null) return "null";
+		return mapper.writeValueAsString(left);
+	}
+	
+	
 }
