@@ -20,41 +20,28 @@ import com.garmin.gemfire.transfer.model.GemfireChangeEvent;
 import com.gemstone.gemfire.cache.Region;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = { KafkaSubscriberApplication.class })
+@SpringBootTest(classes = { KafkaSubscriberApplication.class }, value = { "gemfire.regionName=customer" })
 @DirtiesContext
-public abstract class KafkaSubscriberApplicationTests {
+public class KafkaSubscriberApplicationTests {
 
 	@Autowired
 	protected Sink sink;
 
 	@Autowired
 	protected MessageCollector messageCollector;
-	
+
 	@Autowired
 	@Qualifier("customer")
 	protected Region customerRegion;
 
-	@SpringBootTest("gemfire.regionName=customer")
-	public static class CustomerTests extends KafkaSubscriberApplicationTests {
-
-		@Test
-		public void testAddCustomer() throws InterruptedException {
-			customerRegion.clear();
-			Object keyObject = new String("Key");
-			Object valueObject = new String("Value");
-			Date changeDate = new Date();
-			GemfireChangeEvent changeEvent = new GemfireChangeEvent("Create", changeDate, keyObject, valueObject);
-			sink.input().send(MessageBuilder.withPayload(changeEvent).build());
-			assertEquals(1, customerRegion.keySet().size());
-		}
-
-		/*
-		 * @Test public void loggerTest() { assertNotNull(this.sink.input());
-		 * GenericMessage<String> message = new
-		 * GenericMessage<String>("this is a test message");
-		 * sink.input().send(message);
-		 * 
-		 * assertNotNull(sink.input()); }
-		 */
+	@Test
+	public void testAddCustomer1() throws InterruptedException {
+		customerRegion.clear();
+		Object keyObject = new String("Key");
+		Object valueObject = new String("Value");
+		Date changeDate = new Date();
+		GemfireChangeEvent changeEvent = new GemfireChangeEvent("Create", changeDate, keyObject, valueObject);
+		sink.input().send(MessageBuilder.withPayload(changeEvent).build());
+		assertEquals(1, customerRegion.keySet().size());
 	}
 }
