@@ -35,7 +35,11 @@
 				<artifactId>spring-data-gemfire</artifactId>
 				<version>${spring-data-gemfire.version}</version>
 			</dependency>
-
+			<dependency>
+				<groupId>com.garmin.gemfire.transfer</groupId>
+				<artifactId>gemfire-server-boot</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 			<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
@@ -51,5 +55,6 @@
 		<module>gemfire-client</module>
 		<module>gemfire-transfer-cachelistener</module>
 		<module>spring-cloud-gemfire-support</module>
+		<module>gemfire-server-boot</module>
 	</modules>
 </project>

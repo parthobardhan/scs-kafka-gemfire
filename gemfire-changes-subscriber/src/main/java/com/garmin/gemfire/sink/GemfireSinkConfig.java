@@ -1,4 +1,4 @@
-package com.garmin.sink;
+package com.garmin.gemfire.sink;
 
 import javax.annotation.Resource;
 
