@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -19,7 +20,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.gemstone.gemfire.cache.client.ClientCache;
-import com.gemstone.gemfire.pdx.JSONFormatter;
 import com.gemstone.gemfire.pdx.PdxInstance;
 import com.gemstone.gemfire.pdx.PdxInstanceFactory;
 
@@ -278,21 +278,21 @@ public class JSONTypedFormatter {
 					}
 				}
 				return intArr;				
-			case "[Ljava.lang.Object;":  //TODO: This hasn't been tested.  I haven't tested an array of objects yet.
-				ArrayNode objArrayNode = (ArrayNode) parentNode.get(fieldName);
-				Object[] objArr = new Object[objArrayNode.size()];
-				int oindex = 0;
-				for (JsonNode node : objArrayNode) {
-					Iterator<String> arFieldNames = node.fieldNames();
-					while (arFieldNames.hasNext()) {
-						String arFieldName = arFieldNames.next();
-						if (arFieldName.endsWith(TYPE_SUFFIX)) continue;
-						Object arrObj = jsonNodeToObject(cache, node, arFieldName);
-						objArr[oindex] = arrObj;					
-					}
-					oindex++;
-				}
-				return objArr;							
+//			case "[Ljava.lang.Object;":  //TODO: This hasn't been tested.  I haven't tested an array of objects yet.
+//				ArrayNode objArrayNode = (ArrayNode) parentNode.get(fieldName);
+//				Object[] objArr = new Object[objArrayNode.size()];
+//				int oindex = 0;
+//				for (JsonNode node : objArrayNode) {
+//					Iterator<String> arFieldNames = node.fieldNames();
+//					while (arFieldNames.hasNext()) {
+//						String arFieldName = arFieldNames.next();
+//						if (arFieldName.endsWith(TYPE_SUFFIX)) continue;
+//						Object arrObj = jsonNodeToObject(cache, node, arFieldName);
+//						objArr[oindex] = arrObj;					
+//					}
+//					oindex++;
+//				}
+//				return objArr;							
 			case "java.util.ArrayList":
 				ArrayList list = new ArrayList();
 				ArrayNode arrayListNode = (ArrayNode) parentNode.get(fieldName);
