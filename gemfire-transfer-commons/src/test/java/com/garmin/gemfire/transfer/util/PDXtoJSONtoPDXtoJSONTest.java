@@ -23,21 +23,21 @@ public class PDXtoJSONtoPDXtoJSONTest {
 	public static void main(String[] args) throws Exception{
 		String locator = "olaxpd-itwgfdata00";
 		PDXtoJSONtoPDXtoJSONTest saf = new PDXtoJSONtoPDXtoJSONTest();		
-//		saf.doSomething(locator, "garminCustomer");
-//		saf.doSomething(locator, "garminCustomerNotes");
-//		saf.doSomething(locator, "garminCustomerPreferenceTypes");
-//		saf.doSomething(locator, "garminCustomerPreferences");
-//		saf.doSomething(locator, "garminCustomerVerifiedPhoneIndex");
-//		saf.doSomething(locator, "garminDS_doubleOptIn");
-//		saf.doSomething(locator, "garminDS_emailPreferenceCategories");
-//		saf.doSomething(locator, "sso_SMSVerificationCode");
-//		saf.doSomething(locator, "sso_applicationConfiguration");
-//		saf.doSomething(locator, "sso_customerLogin");
-//		saf.doSomething(locator, "sso_loginToken");
-//		saf.doSomething(locator, "sso_registeredService");
-//		saf.doSomething(locator, "sso_rememberMeTicket");
-//		saf.doSomething(locator, "sso_serviceTicket");
-//		saf.doSomething(locator, "sso_tempPassword");
+		saf.doSomething(locator, "garminCustomer");
+		saf.doSomething(locator, "garminCustomerNotes");
+		saf.doSomething(locator, "garminCustomerPreferenceTypes");
+		saf.doSomething(locator, "garminCustomerPreferences");
+		saf.doSomething(locator, "garminCustomerVerifiedPhoneIndex");
+		saf.doSomething(locator, "garminDS_doubleOptIn");
+		saf.doSomething(locator, "garminDS_emailPreferenceCategories");
+		saf.doSomething(locator, "sso_SMSVerificationCode");
+		saf.doSomething(locator, "sso_applicationConfiguration");
+		saf.doSomething(locator, "sso_customerLogin");
+		saf.doSomething(locator, "sso_loginToken");
+		saf.doSomething(locator, "sso_registeredService");
+		saf.doSomething(locator, "sso_rememberMeTicket");
+		saf.doSomething(locator, "sso_serviceTicket");
+		saf.doSomething(locator, "sso_tempPassword");
 		saf.doSomething(locator, "sso_ticketGrantingTicket");
 		System.out.println("DONE");
 		
