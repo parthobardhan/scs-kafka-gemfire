@@ -1,4 +1,4 @@
-package com.garmin;
+package com.garmin.gemfire;
 
 import static org.junit.Assert.assertEquals;
 
@@ -15,6 +15,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.cloud.stream.test.binder.MessageCollector;
 
+import com.garmin.gemfire.KafkaSubscriberApplication;
 import com.garmin.gemfire.transfer.model.GemfireChangeEvent;
 import com.gemstone.gemfire.cache.Region;
 

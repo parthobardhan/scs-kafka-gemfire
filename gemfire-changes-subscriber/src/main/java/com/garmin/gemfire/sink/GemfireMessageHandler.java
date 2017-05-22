@@ -1,4 +1,4 @@
-package com.garmin.sink;
+package com.garmin.gemfire.sink;
 
 import org.springframework.integration.handler.AbstractMessageHandler;
 import org.springframework.messaging.Message;
