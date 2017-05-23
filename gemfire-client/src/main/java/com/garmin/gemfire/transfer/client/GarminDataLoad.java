@@ -36,7 +36,7 @@ public class GarminDataLoad {
 		logger.info("Starting - loading of OrderDetail to gemfire ");
 		ConfigurableApplicationContext ctx =SpringApplication.run(GarminDataLoad.class, args);
 		GarminDataLoad thisObj= ctx.getBean(GarminDataLoad.class);
-		thisObj.generateAllOrderdetails();     
+		thisObj.generateLoad();     
 		logger.info("Completed - loading of OrderDetail to gemfire");
 	 }
 	
@@ -63,7 +63,7 @@ public class GarminDataLoad {
 
 	public void generateLoad(){
 		
-		for (int i=1;i<1000;i++) {
+		for (int i=1;i<10;i++) {
 			Customer orderDetail=new Customer();
 			orderDetail.setOrderNumber(nextInteger());
 			orderDetail.setOrderDate(new Date());

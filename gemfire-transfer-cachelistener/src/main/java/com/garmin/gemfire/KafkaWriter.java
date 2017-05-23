@@ -52,8 +52,6 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 	private static ZkClient zkClient = null;
 	private static ZkUtils zkUtils = null;
 
-
-
 	@Override
 	public void afterCreate(EntryEvent event) {
 		captureEvent(event);
@@ -80,14 +78,20 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
             						   Integer.parseInt(configData.getValue(KAFKA_NUM_REPLICAS)),
             						   new Properties(), 
             						   RackAwareMode.Safe$.MODULE$);
+            	topicSet.add(topicName);
             	LOGGER.info("Created topic: " + topicName);
             } catch (TopicExistsException e) {
             	LOGGER.info("Topic " + topicName + " already exists.");
+            	topicSet.add(topicName);
+            } catch (Exception ex){
+            	LOGGER.error("Error while creating topic :"+topicName);
+            	ex.printStackTrace();
             }
-            topicSet.add(topicName);
         }		
 		
-		String region= event.getRegion().getName();
+    //    String callObj=(String)event.getCallbackArgument();
+       
+        String region= event.getRegion().getName();
 		Long now = System.currentTimeMillis();
 		String jsonTransport;
 		try {
