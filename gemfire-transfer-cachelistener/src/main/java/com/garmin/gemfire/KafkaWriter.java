@@ -76,7 +76,9 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 
 		// To avoid feedback loop between clusters
 		if (event.isCallbackArgumentAvailable()) {
-            if (TransferConstants.UPDATE_SOURCE.equals(event.getCallbackArgument().toString())) return;
+			if (event.getCallbackArgument() !=null ) {
+				if (TransferConstants.UPDATE_SOURCE.equals(event.getCallbackArgument().toString())) return;
+			}
 		}
 		//Some applications puts bogus string with key starts with “MONITORING-“, Ignore such updates 
 		if (event.getKey().toString().startsWith(CONST_MONITORING)) return;
@@ -122,7 +124,6 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 	    }catch(Exception e){
 	    	LOGGER.error("Error while sending data to kafka :"+e.getMessage());
 	    	e.printStackTrace();
-	    }finally{
 	    	kafkaProducer.close();
 	    }
 	}
