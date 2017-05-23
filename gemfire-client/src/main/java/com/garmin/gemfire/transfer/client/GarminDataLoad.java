@@ -58,6 +58,7 @@ public class GarminDataLoad {
 			logger.info("Loading an object to gemfire :"+key);
 		}
 		geodeService.putOrderAll(orderDetails);
+		
 	}
 
 	public void generateLoad(){
