@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.garmin.common.utils.config.ConfigurationData;
+import com.garmin.gemfire.transfer.common.TransferConstants;
 import com.garmin.gemfire.transfer.util.JSONTypedFormatter;
 import com.gemstone.gemfire.cache.Declarable;
 import com.gemstone.gemfire.cache.EntryEvent;
@@ -44,14 +45,18 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 	private static final String ZOOKEEPER_CONNECTION_TIMEOUT = "zookeeper.connection.timeout.ms";
 	private static final String ZOOKEEPER_SECURED            = "zookeeper.secured";	
 	
+	private static final String CONST_MONITORING="MONITORING-";
+	
 	private static final Logger LOGGER = LoggerFactory.getLogger(KafkaWriter.class);
 	private static final Properties kafkaConfigProperties = new Properties();
 	private static ConfigurationData configData = ConfigurationData.getInstance("gemfire-transfer-cachelistener");
+
 	
 	private static Set<String> topicSet = new HashSet<String>();
 	private static ZkClient zkClient = null;
 	private static ZkUtils zkUtils = null;
-
+	private static Producer kafkaProducer =null;
+	
 	@Override
 	public void afterCreate(EntryEvent event) {
 		captureEvent(event);
@@ -69,8 +74,15 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 	
 	private void captureEvent(EntryEvent event) {
 
+		// To avoid feedback loop between clusters
+		if (event.isCallbackArgumentAvailable()) {
+            if (TransferConstants.UPDATE_SOURCE.equals(event.getCallbackArgument().toString())) return;
+		}
+		//Some applications checks if gemfire is up by putting bogus String key-value pair to the region with 
+		// key starts with “MONITORING-“. So, ignore such update 
+		if (event.getKey().toString().startsWith(CONST_MONITORING)) return;
+		
 		String topicName = event.getRegion().getName() + "-" + configData.getValue(GEMFIRE_CLUSTER_NAME);
-        
         if(!topicSet.contains(topicName)) {
             try {
             	AdminUtils.createTopic(zkUtils, topicName,
@@ -89,8 +101,6 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
             }
         }		
 		
-    //    String callObj=(String)event.getCallbackArgument();
-       
         String region= event.getRegion().getName();
 		Long now = System.currentTimeMillis();
 		String jsonTransport;
@@ -104,33 +114,17 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 		
 	}
 	
-	private void sendToKafka(String topicName, byte[] byteArray) {
-	    // write to kafka topic
-		// Externalize the properties with bookstrap, acks, block on buffer, retries etc.
-		Producer producer = new KafkaProducer<String, String>(kafkaConfigProperties);
-		try{
-		    ProducerRecord<String, byte[]> rec = new ProducerRecord<String, byte[]>(topicName, byteArray);
-		    producer.send(rec);
-	    }catch(Exception e){
-	    	LOGGER.error("Error while sending data to kafka :" + e.getMessage());
-	    	e.printStackTrace();
-	    }finally{
-	    	producer.close();
-	    }
-	}
 	
 	private void sendToKafka(String topicName, String message) {
-	    // write to kafka topic
 		// Externalize the properties with bookstrap, acks, block on buffer, retries etc.
-		Producer producer = new KafkaProducer<String, String>(kafkaConfigProperties);
 		try{
 		    ProducerRecord<String, String> rec = new ProducerRecord<String, String>(topicName, message);
-		    producer.send(rec);
+		    kafkaProducer.send(rec);
 	    }catch(Exception e){
 	    	LOGGER.error("Error while sending data to kafka :"+e.getMessage());
 	    	e.printStackTrace();
 	    }finally{
-	    	producer.close();
+	    	kafkaProducer.close();
 	    }
 	}
 		
@@ -148,7 +142,7 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
         zkUtils = new ZkUtils(zkClient,
         					  new ZkConnection(configData.getValue(ZOOKEEPER_HOSTS)),
         					  Boolean.parseBoolean(configData.getValue(ZOOKEEPER_SECURED)));
-       
+        kafkaProducer = new KafkaProducer<String, String>(kafkaConfigProperties);
 	    	    
 	}
 
