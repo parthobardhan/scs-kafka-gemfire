@@ -78,8 +78,7 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 		if (event.isCallbackArgumentAvailable()) {
             if (TransferConstants.UPDATE_SOURCE.equals(event.getCallbackArgument().toString())) return;
 		}
-		//Some applications checks if gemfire is up by putting bogus String key-value pair to the region with 
-		// key starts with “MONITORING-“. So, ignore such update 
+		//Some applications puts bogus string with key starts with “MONITORING-“, Ignore such updates 
 		if (event.getKey().toString().startsWith(CONST_MONITORING)) return;
 		
 		String topicName = event.getRegion().getName() + "-" + configData.getValue(GEMFIRE_CLUSTER_NAME);
