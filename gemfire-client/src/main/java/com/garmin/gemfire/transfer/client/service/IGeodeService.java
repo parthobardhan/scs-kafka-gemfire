@@ -10,6 +10,20 @@ public interface IGeodeService {
 
 	public Customer putOrder(Integer key,Customer orderDetail);
 	
+
+	public Customer putOrder(Integer key,Customer orderDetail, String source);
+	
+
+	public Customer removeOrder(Integer key);
+	
+	
+	public Customer destroyOrder(Integer key);
+	
+	public Customer destroyOrder(Integer key, String source);
+	
+
+
 	public void putOrderAll(Map<Integer,Customer> orderDetails);
+	
 	
 }

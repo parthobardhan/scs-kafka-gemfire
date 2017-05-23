@@ -1,8 +1,10 @@
 package com.garmin.gemfire.transfer.client;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -15,6 +17,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import com.garmin.gemfire.transfer.client.service.IGeodeService;
+import com.garmin.gemfire.transfer.common.TransferConstants;
 import com.garmin.gemfire.transfer.model.Customer;
 
 
@@ -37,7 +40,8 @@ public class GarminDataLoad {
 		ConfigurableApplicationContext ctx =SpringApplication.run(GarminDataLoad.class, args);
 		GarminDataLoad thisObj= ctx.getBean(GarminDataLoad.class);
 		thisObj.putTest();     
-		thisObj.putAllTest();
+	//	thisObj.putAllTest();
+		thisObj.putTestWithSource();
 		logger.info("Completed - loading of OrderDetail to gemfire");
 	 }
 	
@@ -63,17 +67,61 @@ public class GarminDataLoad {
 	}
 
 	public void putTest(){
-		
+		List<Customer> custList=new ArrayList<Customer>();
 		for (int i=1;i<10;i++) {
 			Customer orderDetail=new Customer();
+			orderDetail.setCustomerNumber(nextInteger());
 			orderDetail.setOrderNumber(nextInteger());
 			orderDetail.setOrderDate(new Date());
 			orderDetail.setCustomerNumber(nextInteger());
 			orderDetail.setShipDate(new Date());
 			orderDetail.setShippingCost(randomFloat());
-			geodeService.putOrder(nextInteger(),orderDetail);
+			geodeService.putOrder(orderDetail.getCustomerNumber(),orderDetail);
+			custList.add(orderDetail);
+		}
+		
+		for(Customer cust:custList){
+			geodeService.destroyOrder(cust.getCustomerNumber(),TransferConstants.UPDATE_SOURCE);
+		}
+		
+		for(Customer cust:custList){
+			geodeService.removeOrder(cust.getCustomerNumber());
+		}
+		
+	}
+	
+	public void putTestWithSource(){
+		
+		List<Customer> custList=new ArrayList<Customer>();
+		for (int i=1;i<10;i++) {
+			Customer orderDetail=new Customer();
+			orderDetail.setCustomerNumber(nextInteger());
+			orderDetail.setOrderNumber(nextInteger());
+			orderDetail.setOrderDate(new Date());
+			orderDetail.setCustomerNumber(nextInteger());
+			orderDetail.setShipDate(new Date());
+			orderDetail.setShippingCost(randomFloat());
+			geodeService.putOrder(orderDetail.getCustomerNumber(),orderDetail,TransferConstants.UPDATE_SOURCE);
+			custList.add(orderDetail);
+		}
+		
+		for(Customer cust:custList){
+			geodeService.destroyOrder(cust.getCustomerNumber(),TransferConstants.UPDATE_SOURCE);
 		}
 	}
+	
+	public void removeTest(){
+		geodeService.removeOrder(new Integer("47212243"));
+	}
+	
+	public void destroyTest(Integer key){
+		geodeService.destroyOrder(new Integer("47212243"));
+	}
+	
+	public void destroyTestWithSource(Integer key){
+		geodeService.destroyOrder(key,TransferConstants.UPDATE_SOURCE);
+	}
+	
 	
 	  public Integer nextInteger() {
 	        int range = (int) (maximum - minimum) + 1;

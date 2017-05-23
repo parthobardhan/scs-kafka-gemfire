@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.garmin.gemfire.transfer.common.TransferConstants;
 import com.garmin.gemfire.transfer.model.Customer;
 import com.gemstone.gemfire.cache.Region;
 import com.gemstone.gemfire.cache.client.ClientCache;
@@ -43,8 +44,31 @@ public class GeodeServiceImpl implements IGeodeService {
 		return region.put(key, orderDetail);
 	}
 
+	public Customer putOrder(Integer key, Customer orderDetail, String source) {
+		logger.debug("Put :"+key+" into region :orderDetail");
+		return region.put(key, orderDetail,source);
+	}
+	
 	public void putOrderAll(Map<Integer,Customer> orderDetails) {
 		region.putAll(orderDetails);
+	}
+
+
+
+	@Override
+	public Customer removeOrder(Integer key) {
+		return region.remove(key);
+	}
+
+
+	@Override
+	public Customer destroyOrder(Integer key) {
+		return region.destroy(key);
+	}
+
+	@Override
+	public Customer destroyOrder(Integer key, String source) {
+		return region.destroy(key,source);
 	}
 
 	
