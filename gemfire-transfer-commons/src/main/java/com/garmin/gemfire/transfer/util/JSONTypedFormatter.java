@@ -222,6 +222,9 @@ public class JSONTypedFormatter {
 				return dataNode.asBoolean();				
 			case "java.lang.Integer":
 				return new Integer(dataNode.asInt());
+			case "java.lang.Float":
+			case "java.lang.Double":
+				return new Float(dataNode.asDouble());
 			case "java.util.Date":
 				return new Date(dataNode.asLong());
 			case "java.sql.Timestamp":

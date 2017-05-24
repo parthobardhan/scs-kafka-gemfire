@@ -24,8 +24,9 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 	
 	@Override
 	protected void handleMessageInternal(Message<?> message) throws Exception {
-		String jsonTransport = (String) message.getPayload();
-		
+		System.out.println("Incoming message : --->"+message);
+		String jsonTransport = new String((byte[]) message.getPayload());
+		System.out.println("Message contents: " + jsonTransport);
 		TransportRecord transportRecord=JSONTypedFormatter.transportRecordFromJson(clientCache, jsonTransport);
 		String key=transportRecord.getKey();
 		Long timestamp=transportRecord.getTimestamp();

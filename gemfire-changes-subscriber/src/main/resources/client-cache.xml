@@ -16,6 +16,9 @@
 		<gfe:locator host="10.5.154.91" port="10334" />
 	</gfe:pool>
 
+	<gfe:client-cache id="yellowClusterCache" pdx-persistent="true"
+		pool-name="yellowCluster" pdx-serializer-ref="autoPdxSerializer">
+	</gfe:client-cache>
 
 	<bean id="autoPdxSerializer" class="com.gemstone.gemfire.pdx.ReflectionBasedAutoSerializer">
 		<property name="serializableClasses">

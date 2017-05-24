@@ -1,11 +1,21 @@
 server:
   port: 8081
 spring:
+  kafka:
+    bootstrap-servers:
+    - olaxda-itwgfkafka00:9092
+    - olaxda-itwgfkafka01:9092
   cloud:
     stream:
+      kafka:
+        binder:
+          zkNodes:
+          - olaxda-itwgfkafka00:2181
+          - olaxda-itwgfkafka01:2181
       bindings:
         input:
-          destination: kafka-gemfire-output
+          destination: customer-poc-old
           consumer:
             header-mode: raw
           group: kafka-subscriber
+    
