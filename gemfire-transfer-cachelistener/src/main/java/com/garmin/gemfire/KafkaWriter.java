@@ -19,6 +19,7 @@ import com.garmin.gemfire.transfer.util.JSONTypedFormatter;
 import com.gemstone.gemfire.cache.Declarable;
 import com.gemstone.gemfire.cache.EntryEvent;
 import com.gemstone.gemfire.cache.util.CacheListenerAdapter;
+import com.gemstone.gemfire.cache.util.TimestampedEntryEvent;
 
 import kafka.admin.AdminUtils;
 import kafka.admin.RackAwareMode;
@@ -103,7 +104,14 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
         }		
 		
         String region= event.getRegion().getName();
-		Long now = System.currentTimeMillis();
+        Long now=null;
+        if (event instanceof TimestampedEntryEvent ){
+        	TimestampedEntryEvent timestampedEvent=(TimestampedEntryEvent) event;
+        	now =  timestampedEvent.getNewTimestamp();
+        } else {
+        	now = System.currentTimeMillis();
+        }
+		
 		String jsonTransport;
 		try {
 			jsonTransport = JSONTypedFormatter.toJsonTransport(event.getKey().toString(), event.getNewValue(), event.getOperation().toString(), event.getRegion().getName(),now);
