@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.garmin.gemfire.transfer.model.TransportRecord;
 import com.gemstone.gemfire.cache.client.ClientCache;
 import com.gemstone.gemfire.pdx.PdxInstance;
 import com.gemstone.gemfire.pdx.PdxInstanceFactory;
@@ -30,11 +31,6 @@ public class JSONTypedFormatter {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JSONTypedFormatter.class);
 	private static ObjectMapper mapper = new ObjectMapper();
 	private static final String TYPE_SUFFIX = "__type";
-	public static final String FIELD_OPERATION = "operation";
-	public static final String FIELD_KEY = "key";
-	public static final String FIELD_REGION = "region";
-	public static final String FIELD_TIMESTAMP = "timestamp";
-	public static final String FIELD_OBJECT = "object";
 	
 	/**
 	 * @param key - The key for the object 
@@ -52,50 +48,33 @@ public class JSONTypedFormatter {
 			json = "{" + JSONTypedFormatter.objectToJsonTuple("root", obj) + "}";
 		}
 		
-		String jsonTransport = "{" + formatTuple(FIELD_OPERATION, operation) + ","
-								   + formatTuple(FIELD_KEY, key) + ","
-								   + formatTuple(FIELD_REGION, regionName) + ","
-								   + formatTupleNum(FIELD_TIMESTAMP, timeStamp) + ","
-								   + formatSingle(FIELD_OBJECT) + ":" + json 
+		String jsonTransport = "{" + formatTuple(TransportRecord.FIELD_OPERATION, operation) + ","
+								   + formatTuple(TransportRecord.FIELD_KEY, key) + ","
+								   + formatTuple(TransportRecord.FIELD_REGION, regionName) + ","
+								   + formatTupleNum(TransportRecord.FIELD_TIMESTAMP, timeStamp) + ","
+								   + formatSingle(TransportRecord.FIELD_OBJECT) + ":" + json 
 								   + "}";
 		return jsonTransport;			
 	}
+	
+	public static TransportRecord transportRecordFromJson(ClientCache cache, String json) throws JsonProcessingException, IOException {
+		JsonNode root = mapper.readTree(json);
 		
-	public static Long getTimestampFromJsonTransport(String json) throws JsonProcessingException, IOException {
-		JsonNode root = mapper.readTree(json);
-		JsonNode timestampNode = root.get(FIELD_TIMESTAMP);
-		Long ts = timestampNode.asLong();
-		return ts;
-	}
-
-
-	public static String getOperationFromJsonTransport(String json) throws JsonProcessingException, IOException {
-		return getFieldFromJsonTransport(json, FIELD_OPERATION);
-	}
-	public static String getKeyFromJsonTransport(String json) throws JsonProcessingException, IOException {
-		return getFieldFromJsonTransport(json, FIELD_KEY);
-	}
-	public static String getRegionFromJsonTransport(String json) throws JsonProcessingException, IOException {
-		return getFieldFromJsonTransport(json, FIELD_REGION);
-	}
-	public static String getFieldFromJsonTransport(String json, String field) throws JsonProcessingException, IOException {
-		JsonNode root = mapper.readTree(json);
-		JsonNode fieldNode = root.get(field);
-		return fieldNode.asText();
-	}
-	public static PdxInstance getObjectFromJsonTransport(ClientCache cache, String json) throws JsonProcessingException, IOException {
-		return fromJsonTransport(cache,json);
-	}
-	/**
-	* @deprecated Use getObjectFromJsonTransport instead.
-	*/
-	@Deprecated
-	public static PdxInstance fromJsonTransport(ClientCache cache, String json) throws JsonProcessingException, IOException {
-		JsonNode root = mapper.readTree(json);
-		JsonNode object = root.get(FIELD_OBJECT);	
+		JsonNode object = root.get(TransportRecord.FIELD_OBJECT);	
 		PdxInstance pi = (PdxInstance)jsonNodeToObject(cache, object, "root");
-		return pi;
+		
+		String region = root.get(TransportRecord.FIELD_REGION).asText();
+		String key = root.get(TransportRecord.FIELD_REGION).asText();
+		String operation = root.get(TransportRecord.FIELD_REGION).asText();
+		Long timestamp = root.get(TransportRecord.FIELD_REGION).asLong();
+		
+		TransportRecord jt = new TransportRecord(operation, key, region, timestamp, pi);
+		
+		return jt;
+		
 	}
+	
+
 	
 	/**
 	 * This will generate a JSON tuple, like "name":"bert" or "customer":{ some big object }

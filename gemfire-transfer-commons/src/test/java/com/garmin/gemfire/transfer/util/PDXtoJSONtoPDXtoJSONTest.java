@@ -3,6 +3,7 @@ package com.garmin.gemfire.transfer.util;
 import java.util.Arrays;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.garmin.gemfire.transfer.model.TransportRecord;
 import com.gemstone.gemfire.cache.Region;
 import com.gemstone.gemfire.cache.client.ClientCache;
 import com.gemstone.gemfire.cache.client.ClientCacheFactory;
@@ -66,12 +67,9 @@ public class PDXtoJSONtoPDXtoJSONTest {
 		Long now = System.currentTimeMillis();
 		String json1 = JSONTypedFormatter.toJsonTransport("key", pi1, "UPDATE", region, now);
 		System.out.println("json1 = " + json1);
-		System.out.println(JSONTypedFormatter.FIELD_TIMESTAMP + " = " + JSONTypedFormatter.getTimestampFromJsonTransport(json1));
-		System.out.println(JSONTypedFormatter.FIELD_KEY + " = " + JSONTypedFormatter.getKeyFromJsonTransport(json1));
-		System.out.println(JSONTypedFormatter.FIELD_OPERATION + " = " + JSONTypedFormatter.getOperationFromJsonTransport(json1));
-		System.out.println(JSONTypedFormatter.FIELD_REGION + " = " + JSONTypedFormatter.getRegionFromJsonTransport(json1));
-		
-		PdxInstance pi2 = JSONTypedFormatter.getObjectFromJsonTransport(cache, json1);		
+	
+		TransportRecord tr = JSONTypedFormatter.transportRecordFromJson(cache, json1);
+		PdxInstance pi2 = (PdxInstance)(tr.getObject());
 		System.out.println("pdx2 = " + pi2);
 		
 		String json2 = JSONTypedFormatter.toJsonTransport("key", pi2, "UPDATE", region, now);
@@ -92,7 +90,6 @@ public class PDXtoJSONtoPDXtoJSONTest {
 			    } else {			    	
 					System.err.println("JSON does not match original, but they have the same characters, so it's probably fine and the difference is caused by Set ordering: " + region);
 			    }
-
 			}				
 		} else {
 			System.out.println("\n== " + region + " Test Passed! ==\n");
