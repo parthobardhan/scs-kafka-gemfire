@@ -1,4 +1,4 @@
-package com.garmin.gemfire.sink;
+package com.garmin.gemfire.transfer.subscriber.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
