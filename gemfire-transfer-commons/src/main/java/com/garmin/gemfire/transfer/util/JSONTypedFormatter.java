@@ -71,7 +71,20 @@ public class JSONTypedFormatter {
 	}
 	
 
-	public static String getTimeStampFromJsonTransport(String json) throws JsonProcessingException, IOException {
+	
+	public static Long getLongTimestampFromJsonTransport(String json) throws JsonProcessingException, IOException {
+		JsonNode root = mapper.readTree(json);
+		JsonNode timestampNode = root.get(FIELD_TIMESTAMP);
+		if (timestampNode.isLong()) {
+			Long ts = timestampNode.asLong();
+			return ts;
+		} else {
+			String isoDate = timestampNode.asText();
+			return OffsetDateTime.parse(isoDate).toInstant().toEpochMilli();
+		}
+	}
+
+	public static String getTimestampFromJsonTransport(String json) throws JsonProcessingException, IOException {
 		JsonNode root = mapper.readTree(json);
 		JsonNode timestampNode = root.get(FIELD_TIMESTAMP);
 		if (timestampNode.isLong()) {
