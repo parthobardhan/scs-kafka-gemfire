@@ -1,28 +1,25 @@
-package com.garmin.gemfire.sink;
+package com.garmin.gemfire.transfer.subscriber.config;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.integration.handler.AbstractMessageHandler;
 import org.springframework.messaging.Message;
 
-import com.garmin.gemfire.transfer.model.GemfireChangeEvent;
 import com.garmin.gemfire.transfer.model.TransportRecord;
 import com.garmin.gemfire.transfer.util.JSONTypedFormatter;
 import com.gemstone.gemfire.cache.Region;
 import com.gemstone.gemfire.cache.client.ClientCache;
-import com.gemstone.gemfire.cache.client.ClientCacheFactory;
 import com.gemstone.gemfire.pdx.PdxInstance;
 
 public class GemfireMessageHandler extends AbstractMessageHandler {
-	private final Region clientRegion;
-	private final Region latestTimestampRegion;
-	private final ClientCache clientCache;
-	
-	
-	public GemfireMessageHandler(Region clientRegion) {
+	private ClientCache clientCache;
+	private Region latestTimestampRegion;
+
+	GemfireMessageHandler(ClientCache clientCache){
 		super();
-		this.clientRegion = clientRegion;
-		ClientCacheFactory ccf = new ClientCacheFactory();
-		this.clientCache=ccf.create();
-		this.latestTimestampRegion=clientCache.getRegion("latestTimestamp");
+		this.clientCache = clientCache;
+		this.latestTimestampRegion = clientCache.getRegion("latestTimestamp");
 	}
 	
 	@Override
@@ -48,14 +45,12 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 	//	clientRegion.put(eventKey, eventObject);
 	}
 	
-	
-	/*
-	@Override
+/*	@Override
 	protected void handleMessageInternal(Message<?> message) throws Exception {
-		GemfireChangeEvent gemfireChangeEvent = (GemfireChangeEvent) message.getPayload();
-		Object eventObject = gemfireChangeEvent.getEventObject();
-		Object eventKey = gemfireChangeEvent.getEventKey();
-		clientRegion.put(eventKey, eventObject);
-	}
-	*/
+		String payload = (String) message.getPayload();
+		TransportRecord transportRec = JSONTypedFormatter.transportRecordFromJson(clientCache, payload);
+		Region clientRegion = clientCache.getRegion(transportRec.getRegion());
+		Map<String, Object> record = new HashMap<>();
+		record.put(transportRec.getKey(), transportRec.getObject());
+	}*/
 }
