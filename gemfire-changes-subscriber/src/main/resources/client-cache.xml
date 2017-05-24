@@ -9,6 +9,8 @@
 
 	<gfe:client-region id="customer" shortcut="LOCAL" />
 
+	<gfe:client-region id="latestTimestamp" shortcut="PROXY" />
+
 	<gfe:pool id="yellowCluster" subscription-enabled="true">
 		<gfe:locator host="10.5.154.250" port="10334" />
 		<gfe:locator host="10.5.154.91" port="10334" />
