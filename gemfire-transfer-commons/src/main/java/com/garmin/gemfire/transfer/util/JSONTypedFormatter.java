@@ -2,12 +2,14 @@ package com.garmin.gemfire.transfer.util;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -19,6 +21,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.garmin.gemfire.transfer.model.TransportRecord;
 import com.gemstone.gemfire.cache.client.ClientCache;
 import com.gemstone.gemfire.pdx.PdxInstance;
 import com.gemstone.gemfire.pdx.PdxInstanceFactory;
@@ -28,7 +31,6 @@ public class JSONTypedFormatter {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JSONTypedFormatter.class);
 	private static ObjectMapper mapper = new ObjectMapper();
 	private static final String TYPE_SUFFIX = "__type";
-
 	
 	/**
 	 * @param key - The key for the object 
@@ -46,23 +48,33 @@ public class JSONTypedFormatter {
 			json = "{" + JSONTypedFormatter.objectToJsonTuple("root", obj) + "}";
 		}
 		
-		String jsonTransport = "{" + formatTuple("operation", operation) + ","
-								   + formatTuple("key", key) + ","
-								   + formatTuple("region", regionName) + ","
-								   + formatTupleNum("timestamp", timeStamp) + ","
-								   + formatSingle("object") + ":" + json 
+		String jsonTransport = "{" + formatTuple(TransportRecord.FIELD_OPERATION, operation) + ","
+								   + formatTuple(TransportRecord.FIELD_KEY, key) + ","
+								   + formatTuple(TransportRecord.FIELD_REGION, regionName) + ","
+								   + formatTupleNum(TransportRecord.FIELD_TIMESTAMP, timeStamp) + ","
+								   + formatSingle(TransportRecord.FIELD_OBJECT) + ":" + json 
 								   + "}";
 		return jsonTransport;			
 	}
 	
-
-	public static PdxInstance fromJsonTransport(ClientCache cache, String json) throws JsonProcessingException, IOException {
+	public static TransportRecord transportRecordFromJson(ClientCache cache, String json) throws JsonProcessingException, IOException {
 		JsonNode root = mapper.readTree(json);
-		JsonNode object = root.get("object");
 		
+		JsonNode object = root.get(TransportRecord.FIELD_OBJECT);	
 		PdxInstance pi = (PdxInstance)jsonNodeToObject(cache, object, "root");
-		return pi;
+		
+		String region = root.get(TransportRecord.FIELD_REGION).asText();
+		String key = root.get(TransportRecord.FIELD_REGION).asText();
+		String operation = root.get(TransportRecord.FIELD_REGION).asText();
+		Long timestamp = root.get(TransportRecord.FIELD_REGION).asLong();
+		
+		TransportRecord jt = new TransportRecord(operation, key, region, timestamp, pi);
+		
+		return jt;
+		
 	}
+	
+
 	
 	/**
 	 * This will generate a JSON tuple, like "name":"bert" or "customer":{ some big object }
