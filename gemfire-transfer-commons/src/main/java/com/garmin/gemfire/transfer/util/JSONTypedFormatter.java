@@ -35,18 +35,17 @@ public class JSONTypedFormatter {
 	public static final String FIELD_REGION = "region";
 	public static final String FIELD_TIMESTAMP = "timestamp";
 	public static final String FIELD_OBJECT = "object";
-
 	
 	/**
 	 * @param key - The key for the object 
 	 * @param obj - The object (This really should be a PDX object, but there are no guarantees.)
 	 * @param operation - The GemFire operation
 	 * @param regionName - The GemFire regionName
-	 * @param timeStamp - ISO 8601 format.  Let the client pass this in rather than generate it ourselves.  
+	 * @param timeStamp - Let the client pass this in rather than generate it ourselves.  
 	 * @return
 	 * @throws JsonProcessingException
 	 */
-	public static String toJsonTransport(String key, Object obj, String operation, String regionName, String timeStamp) throws JsonProcessingException  {
+	public static String toJsonTransport(String key, Object obj, String operation, String regionName, Long timeStamp) throws JsonProcessingException  {
 		String json = "{}";
 		//for a destroy operation, the obj will probably be null
 		if (obj != null) {
@@ -56,44 +55,19 @@ public class JSONTypedFormatter {
 		String jsonTransport = "{" + formatTuple(FIELD_OPERATION, operation) + ","
 								   + formatTuple(FIELD_KEY, key) + ","
 								   + formatTuple(FIELD_REGION, regionName) + ","
-								   + formatTuple(FIELD_TIMESTAMP, timeStamp) + ","
+								   + formatTupleNum(FIELD_TIMESTAMP, timeStamp) + ","
 								   + formatSingle(FIELD_OBJECT) + ":" + json 
 								   + "}";
 		return jsonTransport;			
 	}
-	//Same as above but accepts timestamp as a long.
-	public static String toJsonTransport(String key, Object obj, String operation, String regionName, Long timeStamp) throws JsonProcessingException  {
-		String isoTimeStamp = OffsetDateTime.ofInstant(Instant.ofEpochMilli(timeStamp), ZoneId.systemDefault()).toString();		
-		return toJsonTransport(key, obj, operation, regionName, isoTimeStamp);
-	}	
-	public static String nowAsIsoTimestamp() {
-		return OffsetDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()).toString();
-	}
-	
-
-	
-	public static Long getLongTimestampFromJsonTransport(String json) throws JsonProcessingException, IOException {
+		
+	public static Long getTimestampFromJsonTransport(String json) throws JsonProcessingException, IOException {
 		JsonNode root = mapper.readTree(json);
 		JsonNode timestampNode = root.get(FIELD_TIMESTAMP);
-		if (timestampNode.isLong()) {
-			Long ts = timestampNode.asLong();
-			return ts;
-		} else {
-			String isoDate = timestampNode.asText();
-			return OffsetDateTime.parse(isoDate).toInstant().toEpochMilli();
-		}
+		Long ts = timestampNode.asLong();
+		return ts;
 	}
 
-	public static String getTimestampFromJsonTransport(String json) throws JsonProcessingException, IOException {
-		JsonNode root = mapper.readTree(json);
-		JsonNode timestampNode = root.get(FIELD_TIMESTAMP);
-		if (timestampNode.isLong()) {
-			Long ts = timestampNode.asLong();
-			return OffsetDateTime.ofInstant(Instant.ofEpochMilli(ts), ZoneId.systemDefault()).toString();
-		} else {
-			return timestampNode.asText();
-		}
-	}
 
 	public static String getOperationFromJsonTransport(String json) throws JsonProcessingException, IOException {
 		return getFieldFromJsonTransport(json, FIELD_OPERATION);

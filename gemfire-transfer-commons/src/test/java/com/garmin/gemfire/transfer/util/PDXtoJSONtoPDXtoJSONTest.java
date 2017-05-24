@@ -63,11 +63,10 @@ public class PDXtoJSONtoPDXtoJSONTest {
 		
 		PdxInstance pi1 = (PdxInstance)obj;	
 		System.out.println("pdx1 = " + pi1);
-		String now = JSONTypedFormatter.nowAsIsoTimestamp();
+		Long now = System.currentTimeMillis();
 		String json1 = JSONTypedFormatter.toJsonTransport("key", pi1, "UPDATE", region, now);
 		System.out.println("json1 = " + json1);
 		System.out.println(JSONTypedFormatter.FIELD_TIMESTAMP + " = " + JSONTypedFormatter.getTimestampFromJsonTransport(json1));
-		System.out.println(JSONTypedFormatter.FIELD_TIMESTAMP + " = " + JSONTypedFormatter.getLongTimestampFromJsonTransport(json1));
 		System.out.println(JSONTypedFormatter.FIELD_KEY + " = " + JSONTypedFormatter.getKeyFromJsonTransport(json1));
 		System.out.println(JSONTypedFormatter.FIELD_OPERATION + " = " + JSONTypedFormatter.getOperationFromJsonTransport(json1));
 		System.out.println(JSONTypedFormatter.FIELD_REGION + " = " + JSONTypedFormatter.getRegionFromJsonTransport(json1));
