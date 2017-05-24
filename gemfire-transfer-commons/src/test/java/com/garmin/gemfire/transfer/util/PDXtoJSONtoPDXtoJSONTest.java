@@ -21,24 +21,24 @@ public class PDXtoJSONtoPDXtoJSONTest {
 	private static ObjectMapper mapper = new ObjectMapper();
 	
 	public static void main(String[] args) throws Exception{
-		String locator = "olaxpd-itwgfdata00";
+		String locator = "olaxtd-itwgfdata00";
 		PDXtoJSONtoPDXtoJSONTest saf = new PDXtoJSONtoPDXtoJSONTest();		
 		saf.doSomething(locator, "garminCustomer");
-		saf.doSomething(locator, "garminCustomerNotes");
-		saf.doSomething(locator, "garminCustomerPreferenceTypes");
-		saf.doSomething(locator, "garminCustomerPreferences");
-		saf.doSomething(locator, "garminCustomerVerifiedPhoneIndex");
-		saf.doSomething(locator, "garminDS_doubleOptIn");
-		saf.doSomething(locator, "garminDS_emailPreferenceCategories");
-		saf.doSomething(locator, "sso_SMSVerificationCode");
-		saf.doSomething(locator, "sso_applicationConfiguration");
-		saf.doSomething(locator, "sso_customerLogin");
-		saf.doSomething(locator, "sso_loginToken");
-		saf.doSomething(locator, "sso_registeredService");
-		saf.doSomething(locator, "sso_rememberMeTicket");
-		saf.doSomething(locator, "sso_serviceTicket");
-		saf.doSomething(locator, "sso_tempPassword");
-		saf.doSomething(locator, "sso_ticketGrantingTicket");
+//		saf.doSomething(locator, "garminCustomerNotes");
+//		saf.doSomething(locator, "garminCustomerPreferenceTypes");
+//		saf.doSomething(locator, "garminCustomerPreferences");
+//		saf.doSomething(locator, "garminCustomerVerifiedPhoneIndex");
+//		saf.doSomething(locator, "garminDS_doubleOptIn");
+//		saf.doSomething(locator, "garminDS_emailPreferenceCategories");
+//		saf.doSomething(locator, "sso_SMSVerificationCode");
+//		saf.doSomething(locator, "sso_applicationConfiguration");
+//		saf.doSomething(locator, "sso_customerLogin");
+//		saf.doSomething(locator, "sso_loginToken");
+//		saf.doSomething(locator, "sso_registeredService");
+//		saf.doSomething(locator, "sso_rememberMeTicket");
+//		saf.doSomething(locator, "sso_serviceTicket");
+//		saf.doSomething(locator, "sso_tempPassword");
+//		saf.doSomething(locator, "sso_ticketGrantingTicket");
 		System.out.println("DONE");
 		
 	}
@@ -63,11 +63,15 @@ public class PDXtoJSONtoPDXtoJSONTest {
 		
 		PdxInstance pi1 = (PdxInstance)obj;	
 		System.out.println("pdx1 = " + pi1);
-		Long now = System.currentTimeMillis();
+		String now = JSONTypedFormatter.nowAsIsoTimestamp();
 		String json1 = JSONTypedFormatter.toJsonTransport("key", pi1, "UPDATE", region, now);
 		System.out.println("json1 = " + json1);
+		System.out.println(JSONTypedFormatter.FIELD_TIMESTAMP + " = " + JSONTypedFormatter.getTimeStampFromJsonTransport(json1));
+		System.out.println(JSONTypedFormatter.FIELD_KEY + " = " + JSONTypedFormatter.getKeyFromJsonTransport(json1));
+		System.out.println(JSONTypedFormatter.FIELD_OPERATION + " = " + JSONTypedFormatter.getOperationFromJsonTransport(json1));
+		System.out.println(JSONTypedFormatter.FIELD_REGION + " = " + JSONTypedFormatter.getRegionFromJsonTransport(json1));
 		
-		PdxInstance pi2 = JSONTypedFormatter.fromJsonTransport(cache, json1);		
+		PdxInstance pi2 = JSONTypedFormatter.getObjectFromJsonTransport(cache, json1);		
 		System.out.println("pdx2 = " + pi2);
 		
 		String json2 = JSONTypedFormatter.toJsonTransport("key", pi2, "UPDATE", region, now);

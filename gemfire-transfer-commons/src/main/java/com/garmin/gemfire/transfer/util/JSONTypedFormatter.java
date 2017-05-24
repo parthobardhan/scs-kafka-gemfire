@@ -2,12 +2,14 @@ package com.garmin.gemfire.transfer.util;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -28,6 +30,11 @@ public class JSONTypedFormatter {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JSONTypedFormatter.class);
 	private static ObjectMapper mapper = new ObjectMapper();
 	private static final String TYPE_SUFFIX = "__type";
+	public static final String FIELD_OPERATION = "operation";
+	public static final String FIELD_KEY = "key";
+	public static final String FIELD_REGION = "region";
+	public static final String FIELD_TIMESTAMP = "timestamp";
+	public static final String FIELD_OBJECT = "object";
 
 	
 	/**
@@ -35,31 +42,70 @@ public class JSONTypedFormatter {
 	 * @param obj - The object (This really should be a PDX object, but there are no guarantees.)
 	 * @param operation - The GemFire operation
 	 * @param regionName - The GemFire regionName
-	 * @param timeStamp - Let the client pass this in rather than generate it ourselves.  
+	 * @param timeStamp - ISO 8601 format.  Let the client pass this in rather than generate it ourselves.  
 	 * @return
 	 * @throws JsonProcessingException
 	 */
-	public static String toJsonTransport(String key, Object obj, String operation, String regionName, Long timeStamp) throws JsonProcessingException  {
+	public static String toJsonTransport(String key, Object obj, String operation, String regionName, String timeStamp) throws JsonProcessingException  {
 		String json = "{}";
 		//for a destroy operation, the obj will probably be null
 		if (obj != null) {
 			json = "{" + JSONTypedFormatter.objectToJsonTuple("root", obj) + "}";
 		}
 		
-		String jsonTransport = "{" + formatTuple("operation", operation) + ","
-								   + formatTuple("key", key) + ","
-								   + formatTuple("region", regionName) + ","
-								   + formatTupleNum("timestamp", timeStamp) + ","
-								   + formatSingle("object") + ":" + json 
+		String jsonTransport = "{" + formatTuple(FIELD_OPERATION, operation) + ","
+								   + formatTuple(FIELD_KEY, key) + ","
+								   + formatTuple(FIELD_REGION, regionName) + ","
+								   + formatTuple(FIELD_TIMESTAMP, timeStamp) + ","
+								   + formatSingle(FIELD_OBJECT) + ":" + json 
 								   + "}";
 		return jsonTransport;			
 	}
+	//Same as above but accepts timestamp as a long.
+	public static String toJsonTransport(String key, Object obj, String operation, String regionName, Long timeStamp) throws JsonProcessingException  {
+		String isoTimeStamp = OffsetDateTime.ofInstant(Instant.ofEpochMilli(timeStamp), ZoneId.systemDefault()).toString();		
+		return toJsonTransport(key, obj, operation, regionName, isoTimeStamp);
+	}	
+	public static String nowAsIsoTimestamp() {
+		return OffsetDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()).toString();
+	}
 	
 
+	public static String getTimeStampFromJsonTransport(String json) throws JsonProcessingException, IOException {
+		JsonNode root = mapper.readTree(json);
+		JsonNode timestampNode = root.get(FIELD_TIMESTAMP);
+		if (timestampNode.isLong()) {
+			Long ts = timestampNode.asLong();
+			return OffsetDateTime.ofInstant(Instant.ofEpochMilli(ts), ZoneId.systemDefault()).toString();
+		} else {
+			return timestampNode.asText();
+		}
+	}
+
+	public static String getOperationFromJsonTransport(String json) throws JsonProcessingException, IOException {
+		return getFieldFromJsonTransport(json, FIELD_OPERATION);
+	}
+	public static String getKeyFromJsonTransport(String json) throws JsonProcessingException, IOException {
+		return getFieldFromJsonTransport(json, FIELD_KEY);
+	}
+	public static String getRegionFromJsonTransport(String json) throws JsonProcessingException, IOException {
+		return getFieldFromJsonTransport(json, FIELD_REGION);
+	}
+	public static String getFieldFromJsonTransport(String json, String field) throws JsonProcessingException, IOException {
+		JsonNode root = mapper.readTree(json);
+		JsonNode fieldNode = root.get(field);
+		return fieldNode.asText();
+	}
+	public static PdxInstance getObjectFromJsonTransport(ClientCache cache, String json) throws JsonProcessingException, IOException {
+		return fromJsonTransport(cache,json);
+	}
+	/**
+	* @deprecated Use getObjectFromJsonTransport instead.
+	*/
+	@Deprecated
 	public static PdxInstance fromJsonTransport(ClientCache cache, String json) throws JsonProcessingException, IOException {
 		JsonNode root = mapper.readTree(json);
-		JsonNode object = root.get("object");
-		
+		JsonNode object = root.get(FIELD_OBJECT);	
 		PdxInstance pi = (PdxInstance)jsonNodeToObject(cache, object, "root");
 		return pi;
 	}
