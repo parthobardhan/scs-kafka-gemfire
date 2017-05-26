@@ -55,6 +55,5 @@
 		<module>gemfire-client</module>
 		<module>gemfire-transfer-cachelistener</module>
 		<module>spring-cloud-gemfire-support</module>
-		<module>gemfire-server-boot</module>
 	</modules>
 </project>

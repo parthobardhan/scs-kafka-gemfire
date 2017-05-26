@@ -7,17 +7,26 @@
 	http://www.springframework.org/schema/gemfire http://www.springframework.org/schema/gemfire/spring-gemfire.xsd
 	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
-	<gfe:client-region id="customer" shortcut="LOCAL" />
+	<gfe:client-region id="customer" shortcut="PROXY" />
 
 	<gfe:client-region id="latestTimestamp" shortcut="PROXY" />
 
-	<gfe:pool id="greenCluster" subscription-enabled="true">
+	<gfe:pool id="blueCluster" subscription-enabled="true">
+		<gfe:locator host="10.5.154.27" port="10334" />
+		<gfe:locator host="10.5.154.28" port="10334" />
+	</gfe:pool>
+	
+		<gfe:pool id="greenCluster" subscription-enabled="true">
 		<gfe:locator host="10.5.154.24" port="10334" />
 		<gfe:locator host="10.5.154.29" port="10334" />
 	</gfe:pool>
 
-	<gfe:client-cache id="greenClusterCache" pdx-persistent="true"
-		pool-name="greenCluster" pdx-serializer-ref="autoPdxSerializer">
+	<gfe:pool id="local" subscription-enabled="true">
+		<gfe:locator host="localhost" port="10334" />
+	</gfe:pool>
+	
+	<gfe:client-cache pdx-persistent="true"
+	pool-name="greenCluster" pdx-serializer-ref="autoPdxSerializer">
 	</gfe:client-cache>
 
 	<bean id="autoPdxSerializer" class="com.gemstone.gemfire.pdx.ReflectionBasedAutoSerializer">
@@ -27,5 +36,4 @@
 			</util:list>
 		</property>
 	</bean>
-
 </beans>

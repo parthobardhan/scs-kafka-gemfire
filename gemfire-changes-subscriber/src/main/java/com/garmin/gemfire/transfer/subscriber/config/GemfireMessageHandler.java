@@ -22,36 +22,35 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 		this.latestTimestampRegion = clientCache.getRegion("latestTimestamp");
 	}
 	
-	@Override
-	protected void handleMessageInternal(Message<?> message) throws Exception {
-		System.out.println("Incoming message : --->"+message);
-		String jsonTransport = new String((byte[]) message.getPayload());
-		System.out.println("Message contents: " + jsonTransport);
-		TransportRecord transportRecord=JSONTypedFormatter.transportRecordFromJson(clientCache, jsonTransport);
-		String key=transportRecord.getKey();
-		Long timestamp=transportRecord.getTimestamp();
-		String region=transportRecord.getRegion();
-		
-		String timestampKey = region + "-" + key;
-		
-		PdxInstance pi = (PdxInstance) latestTimestampRegion.get(timestampKey);
-		Long regionTimestamp = (Long) pi.getField("timestamp");
-		if(timestamp > regionTimestamp) {
-			// Check timestamp between region and event
-			latestTimestampRegion.put(key, timestamp);
-			
-			//clientRegion.put(key, transportRecord.getObject());
-		}
-		
-	//	clientRegion.put(eventKey, eventObject);
-	}
+//	@Override
+//	protected void handleMessageInternal(Message<?> message) throws Exception {
+//		System.out.println("Incoming message : --->"+message);
+//		String jsonTransport = new String((byte[]) message.getPayload());
+//		System.out.println("Message contents: " + jsonTransport);
+//		TransportRecord transportRecord=JSONTypedFormatter.transportRecordFromJson(clientCache, jsonTransport);
+//		String key=transportRecord.getKey();
+//		Long timestamp=transportRecord.getTimestamp();
+//		String region=transportRecord.getRegion();
+//		
+//		String timestampKey = region + "-" + key;
+//		
+//		PdxInstance pi = (PdxInstance) latestTimestampRegion.get(timestampKey);
+//		Long regionTimestamp = (Long) pi.getField("timestamp");
+//		if(timestamp > regionTimestamp) {
+//			// Check timestamp between region and event
+//			latestTimestampRegion.put(key, timestamp);
+//			
+//			//clientRegion.put(key, transportRecord.getObject());
+//		}
+//		
+//	//	clientRegion.put(eventKey, eventObject);
+//	}
 	
-/*	@Override
+	@Override
 	protected void handleMessageInternal(Message<?> message) throws Exception {
 		String payload = (String) message.getPayload();
 		TransportRecord transportRec = JSONTypedFormatter.transportRecordFromJson(clientCache, payload);
 		Region clientRegion = clientCache.getRegion(transportRec.getRegion());
-		Map<String, Object> record = new HashMap<>();
-		record.put(transportRec.getKey(), transportRec.getObject());
-	}*/
+		clientRegion.put(transportRec.getKey(), transportRec.getObject());
+	}
 }

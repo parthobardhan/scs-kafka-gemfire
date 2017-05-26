@@ -64,9 +64,9 @@ public class JSONTypedFormatter {
 		PdxInstance pi = (PdxInstance)jsonNodeToObject(cache, object, "root");
 		
 		String region = root.get(TransportRecord.FIELD_REGION).asText();
-		String key = root.get(TransportRecord.FIELD_REGION).asText();
-		String operation = root.get(TransportRecord.FIELD_REGION).asText();
-		Long timestamp = root.get(TransportRecord.FIELD_REGION).asLong();
+		String key = root.get(TransportRecord.FIELD_KEY).asText();
+		String operation = root.get(TransportRecord.FIELD_OPERATION).asText();
+		Long timestamp = root.get(TransportRecord.FIELD_TIMESTAMP).asLong();
 		
 		TransportRecord jt = new TransportRecord(operation, key, region, timestamp, pi);
 		

@@ -54,10 +54,6 @@
 		</dependency>
 		<dependency>
 			<groupId>com.garmin.gemfire.transfer</groupId>
-			<artifactId>spring-cloud-gemfire-support</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.garmin.gemfire.transfer</groupId>
 			<artifactId>gemfire-transfer-commons</artifactId>
 		</dependency>
 		<dependency>
