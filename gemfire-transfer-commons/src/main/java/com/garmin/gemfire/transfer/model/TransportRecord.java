@@ -2,6 +2,10 @@ package com.garmin.gemfire.transfer.model;
 
 public class TransportRecord {
 	
+	/**
+	 * 
+	 */
+	//private static final long serialVersionUID = 1L;
 	private String operation;
 	private String region;
 	private String key;
@@ -14,6 +18,13 @@ public class TransportRecord {
 	public static final String FIELD_TIMESTAMP = "timestamp";
 	public static final String FIELD_OBJECT = "object";
 	
+	
+	public TransportRecord() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+
 	public TransportRecord(String operation, String key, String region, Long timestamp, Object object) {
 		this.operation = operation;
 		this.key = key;

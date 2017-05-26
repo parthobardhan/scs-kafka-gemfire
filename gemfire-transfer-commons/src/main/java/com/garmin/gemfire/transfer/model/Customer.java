@@ -11,6 +11,8 @@ public class Customer {
 	private float totalPrice;
 	
 	
+	
+	
 	public Integer getOrderNumber() {
 		return orderNumber;
 	}

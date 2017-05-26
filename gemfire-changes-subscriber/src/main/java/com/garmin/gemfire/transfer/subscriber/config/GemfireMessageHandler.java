@@ -32,6 +32,7 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 	protected void handleMessageInternal(Message<?> message) throws Exception {
 	
 		String jsonTransport = new String((byte[]) message.getPayload());
+		System.out.println("Message contents: " + jsonTransport);
 		logger.debug("Message contents: " + jsonTransport);
 		TransportRecord transportRecord=JSONTypedFormatter.transportRecordFromJson(clientCache, jsonTransport);
 		String key=transportRecord.getKey();
@@ -40,7 +41,11 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 		
 		String timestampKey = region + "-" + key;
 		PdxInstance pi = (PdxInstance) latestTimestampRegion.get(timestampKey);
-		Long regionTimestamp = (Long) pi.getField("timestamp");
+		Long regionTimestamp=-1L;
+		// first time, the latesttimestamp region object is null
+		if (pi != null) {
+			regionTimestamp = (Long) pi.getField("timestamp");
+		}
 		if(timestamp > regionTimestamp) {
 			// Check timestamp between region and event
 			latestTimestampRegion.put(key, timestamp);
