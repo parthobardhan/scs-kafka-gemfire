@@ -51,7 +51,7 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 			Region clientRegion = clientCache.getRegion(region);
 			//Placeholder for now , based on the operation, call the gemfire  
 			// operations like  destroy, removeall, destroyall etc with TransferConstants.UPDATE_SOURCE
-			clientRegion.put(key, transportRecord,TransferConstants.UPDATE_SOURCE);
+			clientRegion.put(key, transportRecord.getObject(),TransferConstants.UPDATE_SOURCE);
 		}
 		
 	}
