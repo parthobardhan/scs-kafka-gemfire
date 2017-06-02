@@ -39,9 +39,9 @@ public class GarminDataLoad {
 		logger.info("Starting - loading of OrderDetail to gemfire ");
 		ConfigurableApplicationContext ctx =SpringApplication.run(GarminDataLoad.class, args);
 		GarminDataLoad thisObj= ctx.getBean(GarminDataLoad.class);
-		thisObj.putTest();     
-	//	thisObj.putAllTest();
-		thisObj.putTestWithSource();
+	//	thisObj.putTest();     
+		thisObj.putAllTest();
+	//	thisObj.putTestWithSource();
 		logger.info("Completed - loading of OrderDetail to gemfire");
 	 }
 	
@@ -50,7 +50,7 @@ public class GarminDataLoad {
 		
 		Map<Integer,Customer> orderDetails=new HashMap<Integer,Customer>();
 		
-		for (int i=1;i<=2;i++) {
+		for (int i=1;i<=10;i++) {
 			Customer orderDetail=new Customer();
 			Integer key =nextInteger();
 			//orderDetail.setTransId(nextInteger());

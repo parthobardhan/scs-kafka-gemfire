@@ -21,6 +21,8 @@ import com.gemstone.gemfire.cache.Declarable;
 import com.gemstone.gemfire.cache.EntryEvent;
 import com.gemstone.gemfire.cache.util.CacheListenerAdapter;
 import com.gemstone.gemfire.cache.util.TimestampedEntryEvent;
+import com.gemstone.gemfire.internal.cache.EntryEventImpl;
+import com.gemstone.gemfire.internal.cache.versions.VersionTag;
 
 import kafka.admin.AdminUtils;
 import kafka.admin.RackAwareMode;
@@ -53,7 +55,6 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 	private static final Properties kafkaConfigProperties = new Properties();
 	private static ConfigurationData configData = ConfigurationData.getInstance("gemfire-transfer-cachelistener");
 
-	
 	private static Set<String> topicSet = new HashSet<String>();
 	private static ZkClient zkClient = null;
 	private static ZkUtils zkUtils = null;
@@ -73,9 +74,12 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 	public void afterDestroy(EntryEvent event) {
 		captureEvent(event);
 	}
-	
-	private void captureEvent(EntryEvent event) {
 
+	private void captureEvent(EntryEvent event) {
+		EntryEventImpl entryEventImpl = (EntryEventImpl) event;
+		VersionTag tag = entryEventImpl.getVersionTag();
+		long eventTimestamp = tag.getVersionTimeStamp();
+		LOGGER.info("EntryEvent details: key: " + event.getKey() +" operation: " + event.getOperation() + "timestamp: " +eventTimestamp);
 		// To avoid feedback loop between clusters
 		if (event.isCallbackArgumentAvailable()) {
 			if (event.getCallbackArgument() !=null ) {
@@ -105,17 +109,10 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
         }		
 		
         String region= event.getRegion().getName();
-        Long now=null;
-        if (event instanceof TimestampedEntryEvent ){
-        	TimestampedEntryEvent timestampedEvent=(TimestampedEntryEvent) event;
-        	now =  timestampedEvent.getNewTimestamp();
-        } else {
-        	now = System.currentTimeMillis();
-        }
 		
 		String jsonTransport;
 		try {
-			jsonTransport = JSONTypedFormatter.toJsonTransport(event.getKey().toString(), event.getNewValue(), event.getOperation().toString(), event.getRegion().getName(),now);
+			jsonTransport = JSONTypedFormatter.toJsonTransport(event.getKey().toString(), event.getNewValue(), event.getOperation().toString(), event.getRegion().getName(),eventTimestamp);
 			sendToKafka(topicName, jsonTransport);
 		} catch (JsonProcessingException e) {
 			LOGGER.error("Error while parsing JSON object: " + event.getKey().toString() + ", for a region: " + region);
