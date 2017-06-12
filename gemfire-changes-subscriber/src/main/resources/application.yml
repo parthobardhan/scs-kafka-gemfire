@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 8082
 spring:
   kafka:
     bootstrap-servers:
@@ -14,8 +14,7 @@ spring:
           - olaxda-itwgfkafka01:2181
       bindings:
         input:
-          destination: customer-poc-old
+          destination: customer-poc-blue
           consumer:
             header-mode: raw
-          group: kafka-subscriber
-    
+          group: kafka-subscriber    

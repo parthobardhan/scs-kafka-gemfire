@@ -15,10 +15,15 @@
 		<gfe:locator host="10.5.154.27" port="10334" />
 		<gfe:locator host="10.5.154.28" port="10334" />
 	</gfe:pool>
-	
-		<gfe:pool id="greenCluster" subscription-enabled="true">
+
+	<gfe:pool id="greenCluster" subscription-enabled="true">
 		<gfe:locator host="10.5.154.24" port="10334" />
 		<gfe:locator host="10.5.154.29" port="10334" />
+	</gfe:pool>
+
+	<gfe:pool id="yellowCluster" subscription-enabled="true">
+		<gfe:locator host="10.5.154.250" port="10334" />
+		<gfe:locator host="10.5.154.91" port="10334" />
 	</gfe:pool>
 
 	<gfe:pool id="local" subscription-enabled="true">
@@ -26,7 +31,7 @@
 	</gfe:pool>
 	
 	<gfe:client-cache pdx-persistent="true"
-	pool-name="greenCluster" pdx-serializer-ref="autoPdxSerializer">
+	pool-name="yellowCluster" pdx-serializer-ref="autoPdxSerializer">
 	</gfe:client-cache>
 
 	<bean id="autoPdxSerializer" class="com.gemstone.gemfire.pdx.ReflectionBasedAutoSerializer">

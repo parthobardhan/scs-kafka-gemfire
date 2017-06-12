@@ -11,7 +11,7 @@
 
 	<artifactId>gemfire-transfer-cachelistener</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>gemfire-transfer-cachewriter</name>
+	<name>gemfire-transfer-cachelistener</name>
 	<url>http://maven.apache.org</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -84,4 +84,25 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	  <build>
+    <plugins>
+      <!-- any other plugins -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

@@ -30,7 +30,6 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 	
 	@Override
 	protected void handleMessageInternal(Message<?> message) throws Exception {
-	
 		String jsonTransport = new String((byte[]) message.getPayload());
 		logger.debug("Message contents: " + jsonTransport);
 		TransportRecord transportRecord=JSONTypedFormatter.transportRecordFromJson(clientCache, jsonTransport);
