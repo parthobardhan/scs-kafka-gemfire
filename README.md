@@ -6,10 +6,10 @@ This project performs putall operation on the cluster.
 
 2. If the client is going against a secured cluster, add the gfsecurity.properties in the classpath with the following contents
 
-ssl-enabled=true
-javax.net.ssl.keyStoreType=jks
-javax.net.ssl.trustStore=<trust store path; for POC use /opt/java/jre/lib/security/cacerts>
-javax.net.ssl.trustStorePassword=<trust store password; for POC use changeit>
+ssl-enabled=true<br>
+javax.net.ssl.keyStoreType=jks<br>
+javax.net.ssl.trustStore=<trust store path; for POC use /opt/java/jre/lib/security/cacerts><br>
+javax.net.ssl.trustStorePassword=<trust store password; for POC use changeit><br>
 
 
 <b>gemfire-changes-subscriber</b>
@@ -23,10 +23,10 @@ spring.cloud.bindings.destination is the topic name on which the subscriber will
 
 add the gfsecurity.properties in the classpath with the following contents
 
-ssl-enabled=true
-javax.net.ssl.keyStoreType=jks
-javax.net.ssl.trustStore=<trust store path; for POC use /opt/java/jre/lib/security/cacerts>
-javax.net.ssl.trustStorePassword=<trust store password; for POC use changeit>
+ssl-enabled=true<br>
+javax.net.ssl.keyStoreType=jks<br>
+javax.net.ssl.trustStore=<trust store path; for POC use /opt/java/jre/lib/security/cacerts><br>
+javax.net.ssl.trustStorePassword=<trust store password; for POC use changeit><br>
 
 3. To subscribe to a specific gemfire cluster, update the client-cache.xml in src/main/resources to connect to the correctlocators in the pool and point the client cache to that pool.
 
