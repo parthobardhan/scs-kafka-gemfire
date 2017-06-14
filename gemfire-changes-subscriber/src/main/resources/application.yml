@@ -1,3 +1,7 @@
+logging:
+  level:
+    #root: debug
+    com.garmin.gemfire.transfer: debug
 server:
   port: 8082
 spring:
