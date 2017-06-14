@@ -24,5 +24,6 @@ public interface IGeodeService {
 
 	public void putOrderAll(Map<Integer,Customer> orderDetails);
 	
+	public void removeOrders(List<Integer> orderKeys);
 	
 }

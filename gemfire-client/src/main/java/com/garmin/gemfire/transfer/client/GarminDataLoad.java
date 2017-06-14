@@ -39,7 +39,7 @@ public class GarminDataLoad {
 		logger.info("Starting - loading of OrderDetail to gemfire ");
 		ConfigurableApplicationContext ctx =SpringApplication.run(GarminDataLoad.class, args);
 		GarminDataLoad thisObj= ctx.getBean(GarminDataLoad.class);
-	//	thisObj.putTest();     
+		thisObj.putDestroyRemoveTest();     
 		thisObj.putAllTest();
 	//	thisObj.putTestWithSource();
 		logger.info("Completed - loading of OrderDetail to gemfire");
@@ -67,7 +67,7 @@ public class GarminDataLoad {
 	
 	
 
-	public void putTest(){
+	public void putDestroyRemoveTest(){
 		List<Customer> custList=new ArrayList<Customer>();
 		for (int i=1;i<10;i++) {
 			Customer orderDetail=new Customer();
@@ -81,13 +81,26 @@ public class GarminDataLoad {
 			custList.add(orderDetail);
 		}
 		
+		/*
+		// Destroy first 3
+		int i=0;
 		for(Customer cust:custList){
-			geodeService.destroyOrder(cust.getCustomerNumber(),TransferConstants.UPDATE_SOURCE);
+			if (i++<3) 
+				geodeService.destroyOrder(cust.getCustomerNumber(),TransferConstants.UPDATE_SOURCE);
 		}
-		
+		// remove next 3
+		i=0;
 		for(Customer cust:custList){
+			if (i++ >= 3 && i < 6)
 			geodeService.removeOrder(cust.getCustomerNumber());
 		}
+		*/
+		// removeAll
+		List<Integer> orderKeys=new ArrayList<Integer>();
+		for(Customer cust:custList){
+			orderKeys.add(cust.getCustomerNumber());
+		}
+		geodeService.removeOrders(orderKeys);
 		
 	}
 	

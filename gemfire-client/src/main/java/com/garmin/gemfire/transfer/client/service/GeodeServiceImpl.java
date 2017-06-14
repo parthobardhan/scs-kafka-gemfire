@@ -73,6 +73,9 @@ public class GeodeServiceImpl implements IGeodeService {
 	}
 
 
+	public void removeOrders(List<Integer> orderKeys){
+		 region.removeAll(orderKeys);
+	}
 
 	
 }
