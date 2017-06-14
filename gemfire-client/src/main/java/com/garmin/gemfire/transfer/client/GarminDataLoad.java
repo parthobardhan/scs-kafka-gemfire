@@ -63,8 +63,9 @@ public class GarminDataLoad {
 			logger.info("Loading an object to gemfire :"+key);
 		}
 		geodeService.putOrderAll(orderDetails);
-		
 	}
+	
+	
 
 	public void putTest(){
 		List<Customer> custList=new ArrayList<Customer>();

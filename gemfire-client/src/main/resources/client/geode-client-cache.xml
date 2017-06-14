@@ -3,13 +3,17 @@
   "http://www.gemstone.com/dtd/cache6_5.dtd">
 <client-cache>
 
-    <!--  GCP gemfire for GM demo -->
-    <pool name="gem8Cluster">
-  		<locator host="Olaxdd-itwgfblue00" port="10334"/>
-	  	<locator host="Olaxdd-itwgfblue01" port="10334"/>
-  </pool>	
-    
-  	<region name="customer" refid="PROXY"/>
-  	
-	  
+<!-- 	<pool name="gem8Cluster"> -->
+<!-- 		<locator host="Olaxdd-itwgfblue00" port="10334" /> -->
+<!-- 		<locator host="Olaxdd-itwgfblue01" port="10334" /> -->
+<!-- 	</pool> -->
+
+	<pool name="yellowCluster">
+		<locator host="Olaxdd-itwgfyellow00" port="10334" />
+		<locator host="Olaxdd-itwgfyellow01" port="10334" />
+	</pool>
+
+	<region name="customer" refid="PROXY" />
+
+
 </client-cache>
