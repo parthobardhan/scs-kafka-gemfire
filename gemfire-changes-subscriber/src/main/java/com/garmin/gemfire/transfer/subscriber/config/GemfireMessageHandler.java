@@ -11,6 +11,7 @@ import org.springframework.messaging.Message;
 import com.garmin.gemfire.transfer.common.TransferConstants;
 import com.garmin.gemfire.transfer.model.TransportRecord;
 import com.garmin.gemfire.transfer.util.JSONTypedFormatter;
+import com.gemstone.gemfire.cache.Operation;
 import com.gemstone.gemfire.cache.Region;
 import com.gemstone.gemfire.cache.client.ClientCache;
 import com.gemstone.gemfire.pdx.PdxInstance;
@@ -48,10 +49,20 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 			// Check timestamp between region and event
 			latestTimestampRegion.put(key, timestamp);
 			Region clientRegion = clientCache.getRegion(region);
-			//Placeholder for now , based on the operation, call the gemfire  
-			// operations like  destroy, removeall, destroyall etc with TransferConstants.UPDATE_SOURCE
-			clientRegion.put(key, transportRecord.getObject(),TransferConstants.UPDATE_SOURCE);
-		}
+		
+			// put and putAll
+			if (Operation.CACHE_CREATE.toString().equals(transportRecord.getOperation()) ||
+					Operation.PUTALL_CREATE.toString().equals(transportRecord.getOperation())
+					) {
+				logger.debug("Put operation on Region :"+ region +" key "+key);
+				clientRegion.put(key, transportRecord.getObject(),TransferConstants.UPDATE_SOURCE);
+			} else
+			if (Operation.REMOVEALL_DESTROY.toString().equals(transportRecord.getOperation())){
+				logger.debug("Remove operation on Region :"+ region +" key "+key);
+				clientRegion.destroy(key, TransferConstants.UPDATE_SOURCE);
+			}
+		} else 
+			logger.warn("The object :"+key+" for a region :"+region+" is older, hence not updating to region.");
 		
 	}
 	
