@@ -37,7 +37,7 @@ This project creates a CacheListener that can be registered on GemFire regions t
 1. To point to specific Kafka and zookeeper nodes, update gemfire-transfer-parent\gemfire-transfer-cachelistener\src\main\resources\gemfire-transfer-cachelistener.properties
 Update the gemfire.cluster.name to the cluster on which the events are getting generated. The region name and this property will determine the Kafka topic to which messages will be published. eg. if the region is called customer and gemfire.cluster.name is poc-blue. The Kafka topic to which messages will be published is customer-poc-blue. Make sure the subscriber for this topic listens on this name.
 
-2. to build this project use mvn assembly:assembly -DdescriptorId=jar-with-dependencies
+2. to build this project, run "mvn assembly:assembly -DdescriptorId=jar-with-dependencies" from command line 
 
 3. To register this cache listener on the gemfire servers,
 
