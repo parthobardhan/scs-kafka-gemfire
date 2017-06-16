@@ -31,7 +31,7 @@
 	</gfe:pool>
 	
 	<gfe:client-cache pdx-persistent="true"
-	pool-name="yellowCluster" pdx-serializer-ref="autoPdxSerializer">
+	pool-name="blueCluster" pdx-serializer-ref="autoPdxSerializer">
 	</gfe:client-cache>
 
 	<bean id="autoPdxSerializer" class="com.gemstone.gemfire.pdx.ReflectionBasedAutoSerializer">

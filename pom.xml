@@ -53,6 +53,8 @@
 		<module>gemfire-changes-subscriber</module>
 		<module>gemfire-transfer-commons</module>
 		<module>gemfire-client</module>
+		<module>gemfire-client-dataloader</module>
+		<module>gemfire-client-dataremover</module>
 		<module>gemfire-transfer-cachelistener</module>
 		<module>spring-cloud-gemfire-support</module>
 	</modules>

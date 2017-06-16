@@ -3,7 +3,7 @@ logging:
     #root: debug
     com.garmin.gemfire.transfer: debug
 server:
-  port: 8082
+  port: 8081
 spring:
   kafka:
     bootstrap-servers:
@@ -18,7 +18,7 @@ spring:
           - olaxda-itwgfkafka01:2181
       bindings:
         input:
-          destination: customer-poc-blue
+          destination: customer-poc-yellow
           consumer:
             header-mode: raw
           group: kafka-subscriber    

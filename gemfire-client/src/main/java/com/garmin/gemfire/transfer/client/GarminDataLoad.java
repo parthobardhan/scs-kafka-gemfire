@@ -36,13 +36,13 @@ public class GarminDataLoad {
 	private IGeodeService geodeService;
 	
 	public static void main(String[] args) throws Exception {
-		logger.info("Starting - loading of OrderDetail to gemfire ");
+		logger.info("Starting - loading of Customer to gemfire ");
 		ConfigurableApplicationContext ctx =SpringApplication.run(GarminDataLoad.class, args);
 		GarminDataLoad thisObj= ctx.getBean(GarminDataLoad.class);
 		thisObj.putDestroyRemoveTest();     
 		thisObj.putAllTest();
 	//	thisObj.putTestWithSource();
-		logger.info("Completed - loading of OrderDetail to gemfire");
+		logger.info("Completed - loading of Customer to gemfire");
 	 }
 	
 	

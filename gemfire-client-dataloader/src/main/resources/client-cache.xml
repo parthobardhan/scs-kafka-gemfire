@@ -1,0 +1,20 @@
+<!DOCTYPE client-cache PUBLIC
+  "-//GemStone Systems, Inc.//GemFire Declarative Caching 6.5//EN"
+  "http://www.gemstone.com/dtd/cache6_5.dtd">
+<client-cache>
+
+	<pool name="blueCluster">
+		<locator host="Olaxdd-itwgfblue00" port="10334" />
+		<locator host="Olaxdd-itwgfblue01" port="10334" />
+	</pool>
+
+
+<!-- 	<pool name="yellowCluster"> -->
+<!-- 		<locator host="Olaxdd-itwgfyellow00" port="10334" /> -->
+<!-- 		<locator host="Olaxdd-itwgfyellow01" port="10334" /> -->
+<!-- 	</pool> -->
+
+	<region name="customer" refid="PROXY" />
+
+
+</client-cache>
