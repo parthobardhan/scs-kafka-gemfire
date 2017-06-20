@@ -160,11 +160,11 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 		kafkaConfigProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KAFKA_VALUE_SERIALIZER);
 		kafkaConfigProperties.put(ProducerConfig.ACKS_CONFIG, configData.getValue(KAFKA_ACKNOWLEDGEMENTS));
 
-		zkClient = new ZkClient(configData.getValue(ZOOKEEPER_HOSTS),
+	/*	zkClient = new ZkClient(configData.getValue(ZOOKEEPER_HOSTS),
 				Integer.parseInt(configData.getValue(ZOOKEEPER_SESSION_TIMEOUT)),
 				Integer.parseInt(configData.getValue(ZOOKEEPER_CONNECTION_TIMEOUT)), ZKStringSerializer$.MODULE$);
 		zkUtils = new ZkUtils(zkClient, new ZkConnection(configData.getValue(ZOOKEEPER_HOSTS)),
-				Boolean.parseBoolean(configData.getValue(ZOOKEEPER_SECURED)));
+				Boolean.parseBoolean(configData.getValue(ZOOKEEPER_SECURED))); */
 		kafkaProducer = new KafkaProducer<String, String>(kafkaConfigProperties);
 
 	}
