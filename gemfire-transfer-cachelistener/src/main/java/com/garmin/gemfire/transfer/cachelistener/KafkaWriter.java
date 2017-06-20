@@ -6,10 +6,13 @@ import java.util.Set;
 
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.config.SaslConfigs;
+import org.apache.kafka.common.security.JaasUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +49,12 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 	private static final String ZOOKEEPER_CONNECTION_TIMEOUT = "zookeeper.connection.timeout.ms";
 	private static final String ZOOKEEPER_SECURED = "zookeeper.secured";
 
+	// Kafka security 
+	private static final String KAFKA_SECURITY="kafka.security";
+	private static final String KAFKA_SECURITY_PROTOCOL="kafka.security.protocol";
+	private static final String KAFKA_SASL_MECHANISM="kafka.sasl.mechanism";
+	private static final String KAFKA_CLIENT_SECURITY_LOGIN_CONFIG="kafka.client.security.login.config";
+	
 	private static final String CONST_MONITORING = "MONITORING-";
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(KafkaWriter.class);
@@ -136,6 +145,15 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 
 	public void init(Properties arg0) {
 		// Configure the Producer
+		if(configData.getValue(KAFKA_SECURITY) !=null ) {
+			Boolean secure=new Boolean(configData.getValue(KAFKA_SECURITY));
+			LOGGER.info("Kafka security :"+secure);
+			if (secure) {
+				System.setProperty(JaasUtils.JAVA_LOGIN_CONFIG_PARAM, configData.getValue(KAFKA_CLIENT_SECURITY_LOGIN_CONFIG));
+				kafkaConfigProperties.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, configData.getValue(KAFKA_SECURITY_PROTOCOL));
+				kafkaConfigProperties.put(SaslConfigs.SASL_MECHANISM,configData.getValue(KAFKA_SASL_MECHANISM));
+			}
+		}
 		kafkaConfigProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
 				configData.getValue(KAFKA_BOOTSTRAP_SERVERS));
 		kafkaConfigProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KAFKA_KEY_SERIALIZER);
