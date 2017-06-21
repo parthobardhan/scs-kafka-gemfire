@@ -46,20 +46,22 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 					|| Operation.PUTALL_UPDATE.toString().equals(operation)
 					|| Operation.UPDATE.toString().equals(operation)
 					|| Operation.REPLACE.toString().equals(operation)) {
-				logger.debug("performing " + operation + " operation on Region :" + region + "for key " + key);
+				logger.info("performing " + operation + " operation on Region :" + region + "for key " + key);
 				clientRegion.put(key, transportRecord.getObject(), TransferConstants.UPDATE_SOURCE);
 			} else if (Operation.PUT_IF_ABSENT.toString().equals(operation) && !clientRegion.containsKey(key)) {
-				logger.debug("performing " + operation + " operation on Region :" + region + "for key " + key);
+				logger.info("performing " + operation + " operation on Region :" + region + "for key " + key);
 				clientRegion.put(key, transportRecord.getObject(), TransferConstants.UPDATE_SOURCE);
 			} else if (Operation.REMOVEALL_DESTROY.toString().equals(operation)
 					|| Operation.DESTROY.toString().equals(operation)
 					|| (Operation.REMOVE.toString().equals(operation))) {
-				logger.debug("performing " + operation + " operation on Region :" + region + "for key " + key);
-				clientRegion.destroy(key, TransferConstants.UPDATE_SOURCE);
-			} else if (Operation.EXPIRE_DESTROY.toString().equals(operation)) {
-				logger.debug("performing " + operation + " operation on Region :" + region + "for key " + key);
+				logger.info("performing " + operation + " operation on Region :" + region + "for key " + key);
 				clientRegion.destroy(key, TransferConstants.UPDATE_SOURCE);
 			}
+			else if (Operation.EXPIRE_DESTROY.toString().equals(operation)){
+				logger.info("performing " + operation + " operation on Region :" + region + "for key " + key);
+				clientRegion.destroy(key, TransferConstants.UPDATE_SOURCE);
+			} else
+				logger.error("The operation "+transportRecord.getOperation()+" is not implemented and gemfire regions are not updated. Please implement this scenario for proper bi-directional flow"); 
 		} else
 			logger.info("The object with:" + key + " for region :" + region + " is older, hence not updating to region");
 	}
