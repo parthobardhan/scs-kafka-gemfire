@@ -9,21 +9,21 @@ import com.garmin.gemfire.transfer.model.Customer;
 
 public interface IGeodeService {
 
-	public Customer putOrder(Integer key,Customer orderDetail);
+	public Customer putOrder(String key,Customer orderDetail);
 	
 
-	public Customer putOrder(Integer key,Customer orderDetail, String source);
+	public Customer putOrder(String key,Customer orderDetail, String source);
 	
 
-	public Customer removeOrder(Integer key);
+	public Customer removeOrder(String key);
 	
 	
-	public Customer destroyOrder(Integer key);
+	public Customer destroyOrder(String key);
 	
-	public Customer destroyOrder(Integer key, String source);
+	public Customer destroyOrder(String key, String source);
 
-	public void putOrderAll(Map<Integer,Customer> orderDetails);
+	public void putOrderAll(Map<String,Customer> orderDetails);
 	
-	public void removeOrders(List<Integer> orderKeys);
+	public void removeOrders(List<String> orderKeys);
 	
 }

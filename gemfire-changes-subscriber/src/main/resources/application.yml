@@ -18,7 +18,7 @@ spring:
           - olaxda-itwgfkafka01:2181
       bindings:
         input:
-          destination: customer-poc-yellow
+          destination: customer-poc-blue
           consumer:
             header-mode: raw
           group: kafka-subscriber    

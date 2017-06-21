@@ -19,8 +19,6 @@ public class GemfireSinkConfig {
 
 	private static Logger logger = LoggerFactory.getLogger(GemfireSinkConfig.class);
 	ApplicationContext context = new ClassPathXmlApplicationContext("client-cache.xml");
-//	Region customerRegion = context.getBean("customer", Region.class);
-//	Region latestTimestampRegion = context.getBean("latestTimestamp", Region.class);
 	ClientCache clientCache = context.getBean(ClientCache.class);
 	
 	@ServiceActivator(inputChannel = Sink.INPUT)

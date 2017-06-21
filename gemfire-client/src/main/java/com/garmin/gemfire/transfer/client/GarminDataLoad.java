@@ -48,11 +48,11 @@ public class GarminDataLoad {
 	
 	public void putAllTest(){
 		
-		Map<Integer,Customer> orderDetails=new HashMap<Integer,Customer>();
+		Map<String,Customer> orderDetails=new HashMap<String,Customer>();
 		
 		for (int i=1;i<=10;i++) {
 			Customer orderDetail=new Customer();
-			Integer key =nextInteger();
+			String key = new String(nextInteger().toString());
 			//orderDetail.setTransId(nextInteger());
 			orderDetail.setOrderNumber(nextInteger());
 			orderDetail.setOrderDate(new Date());
@@ -77,7 +77,7 @@ public class GarminDataLoad {
 			orderDetail.setCustomerNumber(nextInteger());
 			orderDetail.setShipDate(new Date());
 			orderDetail.setShippingCost(randomFloat());
-			geodeService.putOrder(orderDetail.getCustomerNumber(),orderDetail);
+			geodeService.putOrder(orderDetail.getCustomerNumber().toString(),orderDetail);
 			custList.add(orderDetail);
 		}
 		
@@ -96,9 +96,9 @@ public class GarminDataLoad {
 		}
 		*/
 		// removeAll
-		List<Integer> orderKeys=new ArrayList<Integer>();
+		List<String> orderKeys=new ArrayList<String>();
 		for(Customer cust:custList){
-			orderKeys.add(cust.getCustomerNumber());
+			orderKeys.add(cust.getCustomerNumber().toString());
 		}
 		geodeService.removeOrders(orderKeys);
 		
@@ -115,24 +115,24 @@ public class GarminDataLoad {
 			orderDetail.setCustomerNumber(nextInteger());
 			orderDetail.setShipDate(new Date());
 			orderDetail.setShippingCost(randomFloat());
-			geodeService.putOrder(orderDetail.getCustomerNumber(),orderDetail,TransferConstants.UPDATE_SOURCE);
+			geodeService.putOrder(orderDetail.getCustomerNumber().toString(),orderDetail,TransferConstants.UPDATE_SOURCE);
 			custList.add(orderDetail);
 		}
 		
 		for(Customer cust:custList){
-			geodeService.destroyOrder(cust.getCustomerNumber(),TransferConstants.UPDATE_SOURCE);
+			geodeService.destroyOrder(cust.getCustomerNumber().toString(),TransferConstants.UPDATE_SOURCE);
 		}
 	}
 	
 	public void removeTest(){
-		geodeService.removeOrder(new Integer("47212243"));
+		geodeService.removeOrder("47212243");
 	}
 	
 	public void destroyTest(Integer key){
-		geodeService.destroyOrder(new Integer("47212243"));
+		geodeService.destroyOrder("47212243");
 	}
 	
-	public void destroyTestWithSource(Integer key){
+	public void destroyTestWithSource(String key){
 		geodeService.destroyOrder(key,TransferConstants.UPDATE_SOURCE);
 	}
 	

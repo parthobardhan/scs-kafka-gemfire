@@ -1,20 +1,17 @@
 package com.garmin.gemfire.transfer.subscriber.config;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.handler.AbstractMessageHandler;
 import org.springframework.messaging.Message;
 
 import com.garmin.gemfire.transfer.common.TransferConstants;
+import com.garmin.gemfire.transfer.keys.LatestTimestampKey;
 import com.garmin.gemfire.transfer.model.TransportRecord;
 import com.garmin.gemfire.transfer.util.JSONTypedFormatter;
 import com.gemstone.gemfire.cache.Operation;
 import com.gemstone.gemfire.cache.Region;
 import com.gemstone.gemfire.cache.client.ClientCache;
-import com.gemstone.gemfire.pdx.PdxInstance;
 
 public class GemfireMessageHandler extends AbstractMessageHandler {
 
@@ -33,19 +30,13 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 		String jsonTransport = new String((byte[]) message.getPayload());
 		TransportRecord transportRecord = JSONTypedFormatter.transportRecordFromJson(clientCache, jsonTransport);
 		String key = transportRecord.getKey();
-		Long timestamp = transportRecord.getTimestamp();
+		long timestamp = transportRecord.getTimestamp();
 		String region = transportRecord.getRegion();
-
-		String timestampKey = region + "-" + key;
-		PdxInstance pi = (PdxInstance) latestTimestampRegion.get(timestampKey);
-		Long regionTimestamp = -1L;
-		// first time, the latesttimestamp region object is null
-		if (pi != null) {
-			regionTimestamp = (Long) pi.getField("timestamp");
-		}
-		if (timestamp > regionTimestamp) {
+		LatestTimestampKey timestampKey = new LatestTimestampKey(region, key);
+		if ((!latestTimestampRegion.containsKeyOnServer(timestampKey))
+				|| (timestamp > (long) latestTimestampRegion.get(timestampKey))) {
 			// Check timestamp between region and event
-			latestTimestampRegion.put(key, timestamp);
+			latestTimestampRegion.put(timestampKey, timestamp);
 			Region clientRegion = clientCache.getRegion(region);
 
 			// put and putAll
@@ -65,14 +56,11 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 					|| (Operation.REMOVE.toString().equals(operation))) {
 				logger.debug("performing " + operation + " operation on Region :" + region + "for key " + key);
 				clientRegion.destroy(key, TransferConstants.UPDATE_SOURCE);
-			}
-			else if (Operation.EXPIRE_DESTROY.toString().equals(operation)){
+			} else if (Operation.EXPIRE_DESTROY.toString().equals(operation)) {
 				logger.debug("performing " + operation + " operation on Region :" + region + "for key " + key);
 				clientRegion.destroy(key, TransferConstants.UPDATE_SOURCE);
 			}
 		} else
-			logger.warn("The object :" + key + " for a region :" + region + " is older, hence not updating to region.");
-
+			logger.info("The object with:" + key + " for region :" + region + " is older, hence not updating to region");
 	}
-
 }

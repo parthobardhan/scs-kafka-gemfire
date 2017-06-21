@@ -26,25 +26,25 @@ public class GemfireDataRemover {
 	public static void main(String[] args) {
 		ConfigurableApplicationContext ctx = SpringApplication.run(GemfireDataRemover.class, args);
 		GemfireDataRemover thisGemfireDataRemover = ctx.getBean(GemfireDataRemover.class);
-		thisGemfireDataRemover.removeExistingKeyToTestREMOVEOperation(1);
-		thisGemfireDataRemover.destroyExistingKeyToTestDESTROYOperation(2);
-		List<Integer> keys = new ArrayList<Integer>();
-		keys.add(3);
-		keys.add(4);
+		thisGemfireDataRemover.removeExistingKeyToTestREMOVEOperation("1");
+		thisGemfireDataRemover.destroyExistingKeyToTestDESTROYOperation("2");
+		List<String> keys = new ArrayList<String>();
+		keys.add("3");
+		keys.add("4");
 		thisGemfireDataRemover.removeMultipleKeysToTestREMOVEALLOperation(keys);
 	}
 
-	private void removeExistingKeyToTestREMOVEOperation(int key){
+	private void removeExistingKeyToTestREMOVEOperation(String key){
 		logger.info("Removing an object to gemfire for REMOVE operation with key " + key);
 		gemfireRemoveOperations.removeCustomer(key);
 	}
 	
-	private void destroyExistingKeyToTestDESTROYOperation(int key){
+	private void destroyExistingKeyToTestDESTROYOperation(String key){
 		logger.info("Removing an object to gemfire for DESTROY operation with key " + key);
 		gemfireRemoveOperations.destroyCustomer(key);
 	}
 
-	private void removeMultipleKeysToTestREMOVEALLOperation(List<Integer> keys){
+	private void removeMultipleKeysToTestREMOVEALLOperation(List<String> keys){
 		logger.info("Removing an object to gemfire for REMOVEALL operation with keys " + keys);
 		gemfireRemoveOperations.removeCustomers(keys);
 	}

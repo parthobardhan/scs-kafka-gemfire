@@ -16,9 +16,14 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.garmin.common.utils.config.ConfigurationData;
 import com.garmin.gemfire.transfer.common.TransferConstants;
+import com.garmin.gemfire.transfer.keys.LatestTimestampKey;
 import com.garmin.gemfire.transfer.util.JSONTypedFormatter;
+import com.gemstone.gemfire.cache.Cache;
+import com.gemstone.gemfire.cache.CacheFactory;
 import com.gemstone.gemfire.cache.Declarable;
 import com.gemstone.gemfire.cache.EntryEvent;
+import com.gemstone.gemfire.cache.Operation;
+import com.gemstone.gemfire.cache.Region;
 import com.gemstone.gemfire.cache.util.CacheListenerAdapter;
 import com.gemstone.gemfire.internal.cache.EntryEventImpl;
 import com.gemstone.gemfire.internal.cache.versions.VersionTag;
@@ -32,7 +37,7 @@ import kafka.utils.ZkUtils;
 public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 
 	private static final String GEMFIRE_CLUSTER_NAME = "gemfire.cluster.name";
-
+	private static final String LATEST_TIMESTAMP_REGION = "latestTimestamp";
 	private static final String KAFKA_BOOTSTRAP_SERVERS = "kafka.bootstrap.servers";
 	private static final String KAFKA_ACKNOWLEDGEMENTS = "kafka.acks";
 	private static final String KAFKA_NUM_PARTITIONS = "kafka.partition.count";
@@ -57,6 +62,8 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 	private static ZkUtils zkUtils = null;
 	private static Producer kafkaProducer = null;
 
+	private static HashSet eventOperationSupported = new HashSet<String>();
+
 	@Override
 	public void afterCreate(EntryEvent event) {
 		captureEvent(event);
@@ -73,22 +80,18 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 	}
 
 	private void captureEvent(EntryEvent event) {
+		if (!verifyEvent(event))
+			return;
+		
 		EntryEventImpl entryEventImpl = (EntryEventImpl) event;
 		VersionTag tag = entryEventImpl.getVersionTag();
 		long eventTimestamp = tag.getVersionTimeStamp();
-		LOGGER.info("EntryEvent details: key: " + event.getKey() + " operation: " + event.getOperation() + "timestamp: "
-				+ eventTimestamp);
-		// To avoid feedback loop between clusters
-		if (event.isCallbackArgumentAvailable()) {
-			if (event.getCallbackArgument() != null) {
-				if (TransferConstants.UPDATE_SOURCE.equals(event.getCallbackArgument().toString()))
-					return;
-			}
-		}
-		// Some applications puts bogus string with key starts with
-		// “MONITORING-“, Ignore such updates
-		if (event.getKey().toString().startsWith(CONST_MONITORING))
-			return;
+		LOGGER.info("EntryEvent details: region: " + event.getRegion().getName() + "key: " + event.getKey().toString()
+				+ " operation: " + event.getOperation() + "timestamp: " + eventTimestamp);
+		Cache cache = CacheFactory.getAnyInstance();
+		Region<LatestTimestampKey, Long> latestTimestampRegion = cache.getRegion(LATEST_TIMESTAMP_REGION);
+		latestTimestampRegion.put(new LatestTimestampKey(event.getRegion().getName(), event.getKey().toString()),
+				eventTimestamp);
 
 		String topicName = event.getRegion().getName() + "-" + configData.getValue(GEMFIRE_CLUSTER_NAME);
 		if (!topicSet.contains(topicName)) {
@@ -119,6 +122,45 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 			e.printStackTrace();
 		}
 
+	}
+
+	private boolean verifyEvent(EntryEvent event) {
+		// To avoid feedback loop between clusters
+		if (event.isCallbackArgumentAvailable()) {
+			if (event.getCallbackArgument() != null) {
+				if (TransferConstants.UPDATE_SOURCE.equals(event.getCallbackArgument().toString()))
+					return false;
+			}
+		}
+		// Some applications puts bogus string with key starts with
+		// “MONITORING-“, Ignore such updates
+		if (event.getKey().toString().startsWith(CONST_MONITORING))
+			return false;
+		
+		//Do not process CRUD operations
+		
+		Operation operation = event.getOperation();
+
+		if (!supportedOperations().contains(operation))
+			return false;
+
+		return true;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private HashSet supportedOperations() {
+		HashSet supportedOperationHashSet = new HashSet<Operation>();
+		supportedOperationHashSet.add(Operation.CREATE);
+		supportedOperationHashSet.add(Operation.PUTALL_CREATE);
+		supportedOperationHashSet.add(Operation.PUTALL_UPDATE);
+		supportedOperationHashSet.add(Operation.UPDATE);
+		supportedOperationHashSet.add(Operation.REPLACE);
+		supportedOperationHashSet.add(Operation.PUT_IF_ABSENT);
+		supportedOperationHashSet.add(Operation.DESTROY);
+		supportedOperationHashSet.add(Operation.REMOVE);
+		supportedOperationHashSet.add(Operation.REMOVEALL_DESTROY);
+		supportedOperationHashSet.add(Operation.EXPIRE_DESTROY);
+		return supportedOperationHashSet;
 	}
 
 	private void sendToKafka(String topicName, String message) {

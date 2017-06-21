@@ -20,7 +20,7 @@ public class GeodeServiceImpl implements IGeodeService {
 
 	public static ClientCache cache = null;
 
-	private static Region<Integer, Customer> region = null;
+	private static Region<String, Customer> region = null;
 
 	public GeodeServiceImpl() {
 		// Create a client cache
@@ -31,36 +31,36 @@ public class GeodeServiceImpl implements IGeodeService {
 		region = cache.getRegion("customer");
 	}
 
-	public Customer putOrder(Integer key, Customer orderDetail) {
+	public Customer putOrder(String key, Customer orderDetail) {
 		logger.debug("Put :" + key + " into region :orderDetail");
 		return region.put(key, orderDetail);
 	}
 
-	public Customer putOrder(Integer key, Customer orderDetail, String source) {
+	public Customer putOrder(String key, Customer orderDetail, String source) {
 		logger.debug("Put :" + key + " into region :orderDetail");
 		return region.put(key, orderDetail, source);
 	}
 
-	public void putOrderAll(Map<Integer, Customer> orderDetails) {
+	public void putOrderAll(Map<String, Customer> orderDetails) {
 		region.putAll(orderDetails);
 	}
 
 	@Override
-	public Customer removeOrder(Integer key) {
+	public Customer removeOrder(String key) {
 		return region.remove(key);
 	}
 
 	@Override
-	public Customer destroyOrder(Integer key) {
+	public Customer destroyOrder(String key) {
 		return region.destroy(key);
 	}
 
 	@Override
-	public Customer destroyOrder(Integer key, String source) {
+	public Customer destroyOrder(String key, String source) {
 		return region.destroy(key, source);
 	}
 
-	public void removeOrders(List<Integer> orderKeys) {
+	public void removeOrders(List<String> orderKeys) {
 		region.removeAll(orderKeys);
 	}
 

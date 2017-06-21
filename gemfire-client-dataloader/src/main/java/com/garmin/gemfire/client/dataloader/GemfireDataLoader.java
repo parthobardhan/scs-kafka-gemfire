@@ -25,7 +25,7 @@ public class GemfireDataLoader {
 
 	
 	@Autowired
-	private GemfireLoadOperations gemfireLoadOperations;
+	private GemfireLoadAndGetOperations gemfireOperations;
 	
 	public static void main(String[] args) {
 		ConfigurableApplicationContext ctx = SpringApplication.run(GemfireDataLoader.class, args);
@@ -37,37 +37,38 @@ public class GemfireDataLoader {
 		thisGemfireDataLoader.replaceObjectToTestREPLACEOperation();
 		thisGemfireDataLoader.putAbsentObjectToTestPUTIFABSENTOperation();
 		thisGemfireDataLoader.putExistingObjectToTestPUTIFABSENTOperation();
+		thisGemfireDataLoader.doGets();
 	}
 
 	private void putOneObjectToTestCREATEOperation() {
 		Customer customer = new Customer();
-		Integer key = 1;
+		String key = new String("1");
 		customer.setOrderNumber(nextInteger());
 		customer.setOrderDate(new Date());
 		customer.setCustomerNumber(nextInteger());
 		customer.setShipDate(new Date());
 		customer.setShippingCost(randomFloat());
 		logger.info("Loading an object to gemfire for CREATE operation with key "+key + "and OrderNumber " + customer.getOrderNumber());
-		gemfireLoadOperations.putCustomer(key, customer);
+		gemfireOperations.putCustomer(key, customer);
 	}
 
 	private void putOneObjectUsingPutToTestUPDATEOperation(){
 		Customer customer = new Customer();
-		Integer key = 1;
+		String key = new String("1");
 		customer.setOrderNumber(nextInteger());
 		customer.setOrderDate(new Date());
 		customer.setCustomerNumber(nextInteger());
 		customer.setShipDate(new Date());
 		customer.setShippingCost(randomFloat());
 		logger.info("Loading an object to gemfire for UPDATE operation with key "+key + "and OrderNumber " + customer.getOrderNumber());
-		gemfireLoadOperations.putCustomer(key, customer);
+		gemfireOperations.putCustomer(key, customer);
 	}
 
 	private void putTwoNewObjectsUsingPutAllToTestPUTALL_CREATEOperation() {
-		Map<Integer,Customer> customers=new HashMap<Integer,Customer>();
+		Map<String,Customer> customers=new HashMap<String,Customer>();
 		
 			Customer customer=new Customer();
-			Integer key =2;
+			String key = new String("2");
 			//orderDetail.setTransId(nextInteger());
 			customer.setOrderNumber(nextInteger());
 			customer.setOrderDate(new Date());
@@ -78,7 +79,7 @@ public class GemfireDataLoader {
 			logger.info("Loading an object to gemfire for PUTALL_CREATE operation with key "+key + "and OrderNumber " + customer.getOrderNumber());
 
 			customer=new Customer();
-			key =3;
+			key = new String("3");
 			//orderDetail.setTransId(nextInteger());
 			customer.setOrderNumber(nextInteger());
 			customer.setOrderDate(new Date());
@@ -87,14 +88,14 @@ public class GemfireDataLoader {
 			customer.setShippingCost(randomFloat());
 			customers.put(key,customer);
 			logger.info("Loading an object to gemfire for PUTALL_CREATE operation with key "+key + "and OrderNumber " + customer.getOrderNumber());
-			gemfireLoadOperations.putAllCustomers(customers);
+			gemfireOperations.putAllCustomers(customers);
 	}
 	
 	private void updateTwoObjectsUsingPutAllTestPUTALL_UPDATEOperation(){
-		Map<Integer,Customer> customers=new HashMap<Integer,Customer>();
+		Map<String,Customer> customers=new HashMap<String,Customer>();
 		
 		Customer customer=new Customer();
-		Integer key =2;
+		String key = new String("2");
 		//orderDetail.setTransId(nextInteger());
 		customer.setOrderNumber(nextInteger());
 		customer.setOrderDate(new Date());
@@ -105,7 +106,7 @@ public class GemfireDataLoader {
 		logger.info("Loading an object to gemfire for PUTALL_UPDATE operation with key " + key + "and OrderNumber " + customer.getOrderNumber());
 
 		customer=new Customer();
-		key =3;
+		key = new String("3");
 		//orderDetail.setTransId(nextInteger());
 		customer.setOrderNumber(nextInteger());
 		customer.setOrderDate(new Date());
@@ -115,45 +116,50 @@ public class GemfireDataLoader {
 		customers.put(key,customer);
 		logger.info("Loading an object to gemfire for PUTALL_UPDATE operation with key " + key + "and OrderNumber " + customer.getOrderNumber());
 
-		gemfireLoadOperations.putAllCustomers(customers);
+		gemfireOperations.putAllCustomers(customers);
 	}
 	
 	private void replaceObjectToTestREPLACEOperation(){
 		Customer customer = new Customer();
-		Integer key = 1;
+		String key = new String("1");
 		customer.setOrderNumber(nextInteger());
 		customer.setOrderDate(new Date());
 		customer.setCustomerNumber(nextInteger());
 		customer.setShipDate(new Date());
 		customer.setShippingCost(randomFloat());
 		logger.info("Loading an object to gemfire for REPLACE operation with key "+key + "and OrderNumber " + customer.getOrderNumber());
-		gemfireLoadOperations.replace(key, customer);
+		gemfireOperations.replace(key, customer);
 	}
 	
 	private void putAbsentObjectToTestPUTIFABSENTOperation(){
 		Customer customer = new Customer();
-		Integer key = 4;
+		String key = new String("4");
 		customer.setOrderNumber(nextInteger());
 		customer.setOrderDate(new Date());
 		customer.setCustomerNumber(nextInteger());
 		customer.setShipDate(new Date());
 		customer.setShippingCost(randomFloat());
 		logger.info("Loading an object to gemfire for PUTIFABSENT operation with key "+ key + "and OrderNumber " + customer.getOrderNumber());
-		gemfireLoadOperations.putIfAbsent(key, customer);
+		gemfireOperations.putIfAbsent(key, customer);
 	}
 	
 	private void putExistingObjectToTestPUTIFABSENTOperation(){
 		Customer customer = new Customer();
-		Integer key = 4;
+		String key = new String("4");
 		customer.setOrderNumber(nextInteger());
 		customer.setOrderDate(new Date());
 		customer.setCustomerNumber(nextInteger());
 		customer.setShipDate(new Date());
 		customer.setShippingCost(randomFloat());
 		logger.info("Loading an EXISTING object to gemfire to test PUTIFABSENT operation with key "+key + "and OrderNumber " + customer.getOrderNumber());
-		gemfireLoadOperations.putIfAbsent(key, customer);
+		gemfireOperations.putIfAbsent(key, customer);
 	}
 
+	private void doGets(){
+		Customer customer1 = gemfireOperations.getCustomer("4");
+		Customer customer2 = gemfireOperations.getCustomer("5");
+	}
+	
 	private Integer nextInteger() {
 		int range = (int) (maximum - minimum) + 1;
 		int min = (int) minimum;

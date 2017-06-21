@@ -13,15 +13,15 @@ import com.gemstone.gemfire.cache.client.ClientCacheFactory;
 import com.gemstone.gemfire.pdx.ReflectionBasedAutoSerializer;
 
 @Service
-public class GemfireLoadOperations {
+public class GemfireLoadAndGetOperations {
 
-	private static final Logger logger = LoggerFactory.getLogger(GemfireLoadOperations.class);
+	private static final Logger logger = LoggerFactory.getLogger(GemfireLoadAndGetOperations.class);
 
 	public static ClientCache cache = null;
 
-	private static Region<Integer, Customer> region = null;
+	private static Region<String, Customer> region = null;
 
-	public GemfireLoadOperations() {
+	public GemfireLoadAndGetOperations() {
 		// Create a client cache
 		logger.info("Loading the geode client cache file");
 		cache = new ClientCacheFactory().set("cache-xml-file", "client-cache.xml")
@@ -30,28 +30,32 @@ public class GemfireLoadOperations {
 		region = cache.getRegion("customer");
 	}
 
-	public Customer putCustomer(Integer key, Customer customer) {
+	public Customer putCustomer(String key, Customer customer) {
 		logger.debug("Put :" + key + " into region :customer");
 		return region.put(key, customer);
 	}
 
-	public Customer putCustomer(Integer key, Customer customer, String source) {
+	public Customer putCustomer(String key, Customer customer, String source) {
 		logger.debug("Put :" + key + " into region :customer");
 		return region.put(key, customer, source);
 	}
 
-	public void putAllCustomers(Map<Integer, Customer> orderDetails) {
+	public void putAllCustomers(Map<String, Customer> orderDetails) {
 		region.putAll(orderDetails);
 	}
 
-	public void replace(Integer key, Customer customer) {
+	public void replace(String key, Customer customer) {
 		region.replace(key, customer);
 	}
 
-	public void putIfAbsent(Integer key, Customer customer) {
+	public void putIfAbsent(String key, Customer customer) {
 		region.putIfAbsent(key, customer);
 	}
 
+	public Customer getCustomer(String key){
+		return (Customer) region.get(key);	
+	}
+	
 	// public Customer removeOrder(Integer key) {
 	// return region.remove(key);
 	// }

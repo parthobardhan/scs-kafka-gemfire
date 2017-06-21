@@ -19,7 +19,7 @@ public class GemfireRemoveOperations {
 
 	public static ClientCache cache = null;
 
-	private static Region<Integer, Customer> region = null;
+	private static Region<String, Customer> region = null;
 
 	public GemfireRemoveOperations() {
 		// Create a client cache
@@ -29,19 +29,19 @@ public class GemfireRemoveOperations {
 		region = cache.getRegion("customer");
 	}
 
-	public Customer removeCustomer(Integer key) {
+	public Customer removeCustomer(String key) {
 		return region.remove(key);
 	}
 
-	public Customer destroyCustomer(Integer key) {
+	public Customer destroyCustomer(String key) {
 		return region.destroy(key);
 	}
 
-	public Customer destroyCustomer(Integer key, String source) {
+	public Customer destroyCustomer(String key, String source) {
 		return region.destroy(key, source);
 	}
 
-	public void removeCustomers(List<Integer> keys) {
+	public void removeCustomers(List<String> keys) {
 		region.removeAll(keys);
 	}
 }
