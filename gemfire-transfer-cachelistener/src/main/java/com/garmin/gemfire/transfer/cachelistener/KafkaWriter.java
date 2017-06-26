@@ -5,7 +5,6 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.I0Itec.zkclient.ZkClient;
-import org.I0Itec.zkclient.ZkConnection;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -31,10 +30,6 @@ import com.gemstone.gemfire.cache.util.CacheListenerAdapter;
 import com.gemstone.gemfire.internal.cache.EntryEventImpl;
 import com.gemstone.gemfire.internal.cache.versions.VersionTag;
 
-import kafka.admin.AdminUtils;
-import kafka.admin.RackAwareMode;
-import kafka.common.TopicExistsException;
-import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
 
 public class KafkaWriter extends CacheListenerAdapter implements Declarable {
@@ -103,21 +98,21 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 				eventTimestamp);
 
 		String topicName = event.getRegion().getName() + "-" + configData.getValue(GEMFIRE_CLUSTER_NAME);
-		if (!topicSet.contains(topicName)) {
-			try {
-				AdminUtils.createTopic(zkUtils, topicName, Integer.parseInt(configData.getValue(KAFKA_NUM_PARTITIONS)),
-						Integer.parseInt(configData.getValue(KAFKA_NUM_REPLICAS)), new Properties(),
-						RackAwareMode.Safe$.MODULE$);
-				topicSet.add(topicName);
-				LOGGER.info("Created topic: " + topicName);
-			} catch (TopicExistsException e) {
-				LOGGER.info("Topic " + topicName + " already exists.");
-				topicSet.add(topicName);
-			} catch (Exception ex) {
-				LOGGER.error("Error while creating topic :" + topicName);
-				ex.printStackTrace();
-			}
-		}
+//		if (!topicSet.contains(topicName)) {
+//			try {
+//				AdminUtils.createTopic(zkUtils, topicName, Integer.parseInt(configData.getValue(KAFKA_NUM_PARTITIONS)),
+//						Integer.parseInt(configData.getValue(KAFKA_NUM_REPLICAS)), new Properties(),
+//						RackAwareMode.Safe$.MODULE$);
+//				topicSet.add(topicName);
+//				LOGGER.info("Created topic: " + topicName);
+//			} catch (TopicExistsException e) {
+//				LOGGER.info("Topic " + topicName + " already exists.");
+//				topicSet.add(topicName);
+//			} catch (Exception ex) {
+//				LOGGER.error("Error while creating topic :" + topicName);
+//				ex.printStackTrace();
+//			}
+//		}
 
 		String region = event.getRegion().getName();
 
