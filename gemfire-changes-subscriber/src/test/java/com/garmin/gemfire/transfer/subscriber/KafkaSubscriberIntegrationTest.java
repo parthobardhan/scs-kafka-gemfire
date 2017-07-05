@@ -38,7 +38,7 @@ public class KafkaSubscriberIntegrationTest {
 		ClientCache cc = ccf.create();
 		PdxInstance pi = cc.createPdxInstanceFactory("com.company.DomainObject").writeInt("id", 37)
 				.markIdentityField("id").writeString("name", "Mike Smith").create();
-		String json = JSONTypedFormatter.toJsonTransport("key", pi, "Update", "latestTimestamp", new Date().getTime());
+		String json = JSONTypedFormatter.toJsonTransport("key", "java.lang.String", pi, pi.getClass().getName(), "Update", "latestTimestamp", new Date().getTime());
 		sink.input().send(MessageBuilder.withPayload(json).build());
 	}
 }

@@ -118,7 +118,11 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 
 		String jsonTransport;
 		try {
-			jsonTransport = JSONTypedFormatter.toJsonTransport(event.getKey().toString(), event.getNewValue(),
+			Object key = event.getKey();
+			String keyType = key.getClass().getName();
+			Object obj = event.getNewValue();
+			String objType = obj.getClass().getName();
+			jsonTransport = JSONTypedFormatter.toJsonTransport(key, keyType, obj, objType,
 					event.getOperation().toString(), event.getRegion().getName(), eventTimestamp);
 			sendToKafka(topicName, jsonTransport);
 		} catch (JsonProcessingException e) {

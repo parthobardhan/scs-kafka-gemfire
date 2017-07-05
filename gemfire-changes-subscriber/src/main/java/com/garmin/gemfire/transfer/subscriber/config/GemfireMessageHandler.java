@@ -29,7 +29,7 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 	protected void handleMessageInternal(Message<?> message) throws Exception {
 		String jsonTransport = new String((byte[]) message.getPayload());
 		TransportRecord transportRecord = JSONTypedFormatter.transportRecordFromJson(clientCache, jsonTransport);
-		String key = transportRecord.getKey();
+		Object key = transportRecord.getKey();
 		long timestamp = transportRecord.getTimestamp();
 		String region = transportRecord.getRegion();
 		LatestTimestampKey timestampKey = new LatestTimestampKey(region, key);

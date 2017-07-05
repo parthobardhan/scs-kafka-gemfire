@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -17,6 +18,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,40 +43,45 @@ public class JSONTypedFormatter {
 	 * @return
 	 * @throws JsonProcessingException
 	 */
-	public static String toJsonTransport(String key, Object obj, String operation, String regionName, Long timeStamp) throws JsonProcessingException  {
+	public static String toJsonTransport(Object key, String keyType, Object object, String objectType, String operation, String regionName, Long timeStamp) throws JsonProcessingException  {
 		String json = "{}";
 		//for a destroy operation, the obj will probably be null
-		if (obj != null) {
-			json = "{" + JSONTypedFormatter.objectToJsonTuple("root", obj) + "}";
+		if (object != null) {
+			json = "{" + JSONTypedFormatter.objectToJsonTuple("root", object) + "}";
 		}
 		
 		String jsonTransport = "{" + formatTuple(TransportRecord.FIELD_OPERATION, operation) + ","
-								   + formatTuple(TransportRecord.FIELD_KEY, key) + ","
+								   + formatTupleObj(TransportRecord.FIELD_KEY, key) + ","
+								   + formatTuple(TransportRecord.FIELD_KEY_TYPE, keyType) + ","
 								   + formatTuple(TransportRecord.FIELD_REGION, regionName) + ","
-								   + formatTupleNum(TransportRecord.FIELD_TIMESTAMP, timeStamp) + ","
-								   + formatSingle(TransportRecord.FIELD_OBJECT) + ":" + json 
+								   + formatTupleNumber(TransportRecord.FIELD_TIMESTAMP, timeStamp) + ","
+								   + formatSingle(TransportRecord.FIELD_OBJECT) + ":" + json + ","
+								   + formatTuple(TransportRecord.FIELD_OBJECT_TYPE, objectType) 
 								   + "}";
 		return jsonTransport;			
 	}
 	
 	public static TransportRecord transportRecordFromJson(ClientCache cache, String json) throws JsonProcessingException, IOException {
-		JsonNode root = mapper.readTree(json);
+		JsonNode top = mapper.readTree(json);
 		
-		JsonNode object = root.get(TransportRecord.FIELD_OBJECT);	
-		PdxInstance pi = (PdxInstance)jsonNodeToObject(cache, object, "root");
+		JsonNode objectNode = top.get(TransportRecord.FIELD_OBJECT);	
+		Object object = jsonNodeToObject(cache, objectNode, "root");
+		String objectType = top.get(TransportRecord.FIELD_OBJECT_TYPE).asText();
 		
-		String region = root.get(TransportRecord.FIELD_REGION).asText();
-		String key = root.get(TransportRecord.FIELD_KEY).asText();
-		String operation = root.get(TransportRecord.FIELD_OPERATION).asText();
-		Long timestamp = root.get(TransportRecord.FIELD_TIMESTAMP).asLong();
+		Object key = jsonNodeToObject(cache,top,TransportRecord.FIELD_KEY );
 		
-		TransportRecord jt = new TransportRecord(operation, key, region, timestamp, pi);
+		String keyType = top.get(TransportRecord.FIELD_KEY_TYPE).asText();
+		
+		String region = top.get(TransportRecord.FIELD_REGION).asText();
+		String operation = top.get(TransportRecord.FIELD_OPERATION).asText();
+		Long timestamp = top.get(TransportRecord.FIELD_TIMESTAMP).asLong();
+		
+		TransportRecord jt = new TransportRecord(key, keyType, object, objectType, region, operation, timestamp);
 		
 		return jt;
 		
 	}
 	
-
 	
 	/**
 	 * This will generate a JSON tuple, like "name":"bert" or "customer":{ some big object }
@@ -171,19 +178,23 @@ public class JSONTypedFormatter {
 			}
 			json.append("}");	
 		} else if (field instanceof Number) {
-			json.append(formatTupleNum(fieldName, (Number)field));
+			json.append(formatTupleNumber(fieldName, (Number)field));
 		} else if (field instanceof Boolean) {
-			json.append(formatTupleBool(fieldName, (Boolean)field));
+			json.append(formatTupleBoolean(fieldName, (Boolean)field));
 		} else if (field instanceof Date) {
 			json.append(formatTuple(fieldName, String.valueOf(((Date)field).getTime())));
 		} else if (field instanceof String) {
 			json.append(formatTuple(fieldName, field.toString()));
 		} else if (field instanceof Locale) {
 			json.append(formatTuple(fieldName, field.toString()));			
-		} else {
-			//TODO: remove system.outs before production.  They are only here because sometimes LOGGER is flakey in Test					
+		} else {			
+			//TODO: remove system.outs before production.  They are only here because sometimes LOGGER is flakey in Test
+
 			System.out.println("fieldToJson Unhandled Field Type = " + field.getClass().getName());
 			LOGGER.error("fieldToJson Unhandled Field Type = " + field.getClass().getName());
+			json.append(formatSingle(fieldName));
+			json.append(":");
+			json.append(mapper.writeValueAsString(field));
 		}
 		
 		return json.toString();
@@ -223,8 +234,9 @@ public class JSONTypedFormatter {
 			case "java.lang.Integer":
 				return new Integer(dataNode.asInt());
 			case "java.lang.Float":
+				return new Float(dataNode.asDouble());				
 			case "java.lang.Double":
-				return new Float(dataNode.asDouble());
+				return new Double(dataNode.asDouble());
 			case "java.util.Date":
 				return new Date(dataNode.asLong());
 			case "java.sql.Timestamp":
@@ -279,7 +291,9 @@ public class JSONTypedFormatter {
 				} else {
 					loc = new Locale(language);
 				}
-				return loc;							
+				return loc;
+			case "java.util.Collections$EmptyList":
+				return Collections.EMPTY_LIST;				
 			case "[I":
 				ArrayNode arrayNode = (ArrayNode) parentNode.get(fieldName);
 				int[] intArr = new int[arrayNode.size()];
@@ -307,7 +321,8 @@ public class JSONTypedFormatter {
 //					}
 //					oindex++;
 //				}
-//				return objArr;							
+//				return objArr;			
+			case "java.util.Arrays$ArrayList":
 			case "java.util.ArrayList":
 				ArrayList list = new ArrayList();
 				ArrayNode arrayListNode = (ArrayNode) parentNode.get(fieldName);
@@ -322,11 +337,31 @@ public class JSONTypedFormatter {
 					}
 					listIndex++;
 				}
-				return list;
+				
+				if (type.equals("java.util.Arrays$ArrayList")) {
+					return Arrays.asList(list.toArray());					
+				} else {
+					return list;
+				}
 			default:
+				
 				//TODO: remove system.outs before production.  They are only here because sometimes LOGGER is flakey in Test
 				System.out.println("jsonNodeToObject Unhandled type = " + type);
 				LOGGER.error("jsonNodeToObject Unhandled type = " + type);		
+				
+				if (type.contains("com.garmin")) {
+					LOGGER.error("Looks like this is one of our classes, so let's make a best attempt at making it into PDX");
+					writeablePdxFactory = cache.createPdxInstanceFactory(type);				
+					it = dataNode.fieldNames();
+					while (it.hasNext()) {
+						String subFieldName = it.next();
+						if (subFieldName.endsWith(TYPE_SUFFIX)) continue;				
+						Object subObj = jsonNodeToObject(cache, dataNode, subFieldName);
+						writeablePdxFactory.writeObject(subFieldName, subObj);
+					}			
+					return writeablePdxFactory.create();
+				}
+
 		}
 		return null;		
 	}
@@ -337,12 +372,22 @@ public class JSONTypedFormatter {
 		return mapper.writeValueAsString(left) + ":" + mapper.writeValueAsString(right);
 	}
 
-	private static String formatTupleNum(String left, Number right) throws JsonProcessingException {
+	private static String formatTupleObj(String left, Object right) throws JsonProcessingException {
+		if (right instanceof Number) return formatTupleNumber(left, (Number)right);
+		if (right instanceof Boolean) return formatTupleBoolean(left, (Boolean)right);
+		if (right instanceof String) return formatTuple(left, (String)right);
+		
+		LOGGER.error("formatTupleObj called for unhandled type: " + right.getClass().getName());
+		return formatTuple(left, right.toString());
+	}
+
+	
+	private static String formatTupleNumber(String left, Number right) throws JsonProcessingException {
 		if (right == null) return mapper.writeValueAsString(left) + ":" + "null"; 
 		return mapper.writeValueAsString(left) + ":" + right;
 	}
 	
-	private static String formatTupleBool(String left, Boolean right) throws JsonProcessingException {
+	private static String formatTupleBoolean(String left, Boolean right) throws JsonProcessingException {
 		if (right == null) return mapper.writeValueAsString(left) + ":" + "null"; 
 		return mapper.writeValueAsString(left) + ":" + right;
 	}

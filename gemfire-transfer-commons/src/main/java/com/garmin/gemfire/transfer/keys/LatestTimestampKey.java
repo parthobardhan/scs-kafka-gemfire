@@ -10,9 +10,9 @@ public class LatestTimestampKey implements Serializable{
 	private static final long serialVersionUID = -1304251371033594766L;
 
 	private String region;
-	private String key;
+	private Object key;
 	
-	public LatestTimestampKey(String region, String key) {
+	public LatestTimestampKey(String region, Object key) {
 		super();
 		this.region = region;
 		this.key = key;
@@ -22,7 +22,7 @@ public class LatestTimestampKey implements Serializable{
 		return region;
 	}
 
-	public String getKey() {
+	public Object getKey() {
 		return key;
 	}
 
