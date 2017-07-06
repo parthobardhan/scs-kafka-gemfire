@@ -43,7 +43,7 @@ public class JSONTypedFormatter {
 	 * @return
 	 * @throws JsonProcessingException
 	 */
-	public static String toJsonTransport(Object key, String keyType, Object object, String objectType, String operation, String regionName, Long timeStamp) throws JsonProcessingException  {
+	public static String toJsonTransport(Object key, String keyType, Object object, String objectType, String operation, String regionName, Long timeStamp, Long regionVersion) throws JsonProcessingException  {
 		String json = "{}";
 		//for a destroy operation, the obj will probably be null
 		if (object != null) {
@@ -55,6 +55,7 @@ public class JSONTypedFormatter {
 								   + formatTuple(TransportRecord.FIELD_KEY_TYPE, keyType) + ","
 								   + formatTuple(TransportRecord.FIELD_REGION, regionName) + ","
 								   + formatTupleNumber(TransportRecord.FIELD_TIMESTAMP, timeStamp) + ","
+								   + formatTupleNumber(TransportRecord.FIELD_REGION_VERSION, regionVersion) + ","
 								   + formatSingle(TransportRecord.FIELD_OBJECT) + ":" + json + ","
 								   + formatTuple(TransportRecord.FIELD_OBJECT_TYPE, objectType) 
 								   + "}";
@@ -75,8 +76,9 @@ public class JSONTypedFormatter {
 		String region = top.get(TransportRecord.FIELD_REGION).asText();
 		String operation = top.get(TransportRecord.FIELD_OPERATION).asText();
 		Long timestamp = top.get(TransportRecord.FIELD_TIMESTAMP).asLong();
+		Long regionVersion = top.get(TransportRecord.FIELD_REGION_VERSION).asLong();
 		
-		TransportRecord jt = new TransportRecord(key, keyType, object, objectType, region, operation, timestamp);
+		TransportRecord jt = new TransportRecord(key, keyType, object, objectType, region, operation, timestamp, regionVersion);
 		
 		return jt;
 		

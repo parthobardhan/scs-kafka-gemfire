@@ -85,11 +85,11 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 
 	private void captureEvent(EntryEvent event) {
 		if (!verifyEvent(event))
-			return;
-		
+			return;		
 		EntryEventImpl entryEventImpl = (EntryEventImpl) event;
-		VersionTag tag = entryEventImpl.getVersionTag();
+		VersionTag tag = entryEventImpl.getVersionTag(); 
 		long eventTimestamp = tag.getVersionTimeStamp();
+		long regionVersion = tag.getRegionVersion();
 		LOGGER.info("EntryEvent details: region: " + event.getRegion().getName() + "key: " + event.getKey().toString()
 				+ " operation: " + event.getOperation() + "timestamp: " + eventTimestamp);
 		Cache cache = CacheFactory.getAnyInstance();
@@ -123,7 +123,7 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 			Object obj = event.getNewValue();
 			String objType = obj.getClass().getName();
 			jsonTransport = JSONTypedFormatter.toJsonTransport(key, keyType, obj, objType,
-					event.getOperation().toString(), event.getRegion().getName(), eventTimestamp);
+					event.getOperation().toString(), event.getRegion().getName(), eventTimestamp, regionVersion);
 			sendToKafka(topicName, jsonTransport);
 		} catch (JsonProcessingException e) {
 			LOGGER.error("Error while parsing JSON object: " + event.getKey().toString() + ", for a region: " + region);

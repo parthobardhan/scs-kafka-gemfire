@@ -10,6 +10,7 @@ import com.gemstone.gemfire.cache.client.ClientCacheFactory;
 import com.gemstone.gemfire.cache.query.SelectResults;
 import com.gemstone.gemfire.pdx.PdxInstance;
 import com.gemstone.gemfire.pdx.ReflectionBasedAutoSerializer;
+import com.gemstone.gemfire.pdx.internal.PdxInstanceImpl;
 
 
 /** 
@@ -63,16 +64,18 @@ public class PDXtoJSONtoPDXtoJSONTest {
 		}
 		
 		PdxInstance pi1 = (PdxInstance)obj;	
+	
 		System.out.println("pdx1 = " + pi1);
 		Long now = System.currentTimeMillis();
-		String json1 = JSONTypedFormatter.toJsonTransport("key", "java.lang.String", pi1, pi1.getClass().getName(), "UPDATE", region, now);
+		Long regionVersion = 0l;
+		String json1 = JSONTypedFormatter.toJsonTransport("key", "java.lang.String", pi1, pi1.getClass().getName(), "UPDATE", region, now, regionVersion);
 		System.out.println("json1 = " + json1);
 	
 		TransportRecord tr = JSONTypedFormatter.transportRecordFromJson(cache, json1);
 		PdxInstance pi2 = (PdxInstance)(tr.getObject());
 		System.out.println("pdx2 = " + pi2);
 		
-		String json2 = JSONTypedFormatter.toJsonTransport("key", "java.lang.String", pi2, pi2.getClass().getName(), "UPDATE", region, now);
+		String json2 = JSONTypedFormatter.toJsonTransport("key", "java.lang.String", pi2, pi2.getClass().getName(), "UPDATE", region, now, regionVersion);
 		System.out.println("json2 = " + json2);
 		
 		if (!json1.equals(json2)) {
