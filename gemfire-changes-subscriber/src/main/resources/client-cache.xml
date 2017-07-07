@@ -6,8 +6,24 @@
 	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 	http://www.springframework.org/schema/gemfire http://www.springframework.org/schema/gemfire/spring-gemfire.xsd
 	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+	
+	<gfe:client-region id="sso_ticketGrantingTicket" shortcut="PROXY" />
 
-	<gfe:client-region id="customer" shortcut="PROXY" />
+	<gfe:client-region id="sso_customerLogin" shortcut="PROXY" />
+	
+	<gfe:client-region id="sso_loginToken" shortcut="PROXY" />
+	
+	<gfe:client-region id="sso_registeredService" shortcut="PROXY" />
+
+	<gfe:client-region id="sso_rememberMeTicket" shortcut="PROXY" />
+
+	<gfe:client-region id="sso_serviceTicket" shortcut="PROXY" />
+	
+	<gfe:client-region id="sso_tempPassword" shortcut="PROXY" />
+	
+	<gfe:client-region id="sso_applicationConfiguration" shortcut="PROXY" />
+	
+	<gfe:client-region id="sso_SMSVerificationCode" shortcut="PROXY" />
 
 	<gfe:client-region id="latestTimestamp" shortcut="PROXY" />
 
@@ -28,6 +44,11 @@
 
 	<gfe:pool id="local" subscription-enabled="true">
 		<gfe:locator host="localhost" port="10334" />
+	</gfe:pool>
+
+	<gfe:pool id="devSSOCluster" subscription-enabled="true">
+		<gfe:locator host="olaxdd-itwgfsso00" port="10334" />
+		<gfe:locator host="olaxdd-itwgfsso01" port="10334" />
 	</gfe:pool>
 	
 	<gfe:client-cache pdx-persistent="true"

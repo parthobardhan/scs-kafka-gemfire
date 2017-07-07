@@ -84,35 +84,25 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 	}
 
 	private void captureEvent(EntryEvent event) {
-		if (!verifyEvent(event))
-			return;		
 		EntryEventImpl entryEventImpl = (EntryEventImpl) event;
 		VersionTag tag = entryEventImpl.getVersionTag(); 
 		long eventTimestamp = tag.getVersionTimeStamp();
 		long regionVersion = tag.getRegionVersion();
-		LOGGER.info("EntryEvent details: region: " + event.getRegion().getName() + "key: " + event.getKey().toString()
-				+ " operation: " + event.getOperation() + "timestamp: " + eventTimestamp);
+		LOGGER.info("EntryEvent details: region: " + event.getRegion().getName() + " key: " + event.getKey().toString()
+				+ " operation: " + event.getOperation() + " timestamp: " + eventTimestamp);
+
+		if (!verifyEvent(event))
+			return;
+
+		LOGGER.info("Sending EntryEvent to Kafka from: region: " + event.getRegion().getName() + " with key: " + event.getKey().toString()
+				+ " operation: " + event.getOperation() + " timestamp: " + eventTimestamp);
+
 		Cache cache = CacheFactory.getAnyInstance();
 		Region<LatestTimestampKey, Long> latestTimestampRegion = cache.getRegion(LATEST_TIMESTAMP_REGION);
 		latestTimestampRegion.put(new LatestTimestampKey(event.getRegion().getName(), event.getKey().toString()),
 				eventTimestamp);
 
 		String topicName = event.getRegion().getName() + "-" + configData.getValue(GEMFIRE_CLUSTER_NAME);
-//		if (!topicSet.contains(topicName)) {
-//			try {
-//				AdminUtils.createTopic(zkUtils, topicName, Integer.parseInt(configData.getValue(KAFKA_NUM_PARTITIONS)),
-//						Integer.parseInt(configData.getValue(KAFKA_NUM_REPLICAS)), new Properties(),
-//						RackAwareMode.Safe$.MODULE$);
-//				topicSet.add(topicName);
-//				LOGGER.info("Created topic: " + topicName);
-//			} catch (TopicExistsException e) {
-//				LOGGER.info("Topic " + topicName + " already exists.");
-//				topicSet.add(topicName);
-//			} catch (Exception ex) {
-//				LOGGER.error("Error while creating topic :" + topicName);
-//				ex.printStackTrace();
-//			}
-//		}
 
 		String region = event.getRegion().getName();
 

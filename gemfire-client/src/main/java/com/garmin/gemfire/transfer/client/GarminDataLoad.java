@@ -39,7 +39,7 @@ public class GarminDataLoad {
 		logger.info("Starting - loading of Customer to gemfire ");
 		ConfigurableApplicationContext ctx =SpringApplication.run(GarminDataLoad.class, args);
 		GarminDataLoad thisObj= ctx.getBean(GarminDataLoad.class);
-		thisObj.putDestroyRemoveTest();     
+	//	thisObj.putDestroyRemoveTest();     
 		thisObj.putAllTest();
 	//	thisObj.putTestWithSource();
 		logger.info("Completed - loading of Customer to gemfire");

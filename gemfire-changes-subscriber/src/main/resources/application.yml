@@ -2,23 +2,26 @@ logging:
   level:
     #root: debug
     com.garmin.gemfire.transfer: debug
+  file: /var/log/kafka-consumers/loggerFile
 server:
   port: 8081
 spring:
   kafka:
     bootstrap-servers:
-    - olaxda-itwgfkafka00:9092
-    - olaxda-itwgfkafka01:9092
+    - olaxda-itwgfkafka07:9092
+    - olaxda-itwgfkafka08:9092
+    - olaxda-itwgfkafka09:9092
   cloud:
     stream:
       kafka:
         binder:
           zkNodes:
-          - olaxda-itwgfkafka00:2181
-          - olaxda-itwgfkafka01:2181
+          - olaxda-itwgfkafka07:2181
+          - olaxda-itwgfkafka08:2181
+          - olaxda-itwgfkafka09:2181          
       bindings:
         input:
-          destination: customer-poc-blue
+          destination: sso_ticketGrantingTicket-dev-data
           consumer:
             header-mode: raw
-          group: kafka-subscriber    
+          group: kafka-subscriber-3  
