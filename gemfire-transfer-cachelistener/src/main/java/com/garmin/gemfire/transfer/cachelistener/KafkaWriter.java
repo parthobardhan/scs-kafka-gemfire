@@ -19,6 +19,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.garmin.common.utils.config.ConfigurationData;
 import com.garmin.gemfire.transfer.common.TransferConstants;
 import com.garmin.gemfire.transfer.keys.LatestTimestampKey;
+import com.garmin.gemfire.transfer.model.LatestTimestamp;
 import com.garmin.gemfire.transfer.util.JSONTypedFormatter;
 import com.gemstone.gemfire.cache.Cache;
 import com.gemstone.gemfire.cache.CacheFactory;
@@ -29,6 +30,7 @@ import com.gemstone.gemfire.cache.Region;
 import com.gemstone.gemfire.cache.util.CacheListenerAdapter;
 import com.gemstone.gemfire.internal.cache.EntryEventImpl;
 import com.gemstone.gemfire.internal.cache.versions.VersionTag;
+import com.gemstone.gemfire.pdx.PdxInstance;
 
 import kafka.utils.ZkUtils;
 
@@ -49,12 +51,12 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 	private static final String ZOOKEEPER_CONNECTION_TIMEOUT = "zookeeper.connection.timeout.ms";
 	private static final String ZOOKEEPER_SECURED = "zookeeper.secured";
 
-	// Kafka security 
-	private static final String KAFKA_SECURITY="kafka.security";
-	private static final String KAFKA_SECURITY_PROTOCOL="kafka.security.protocol";
-	private static final String KAFKA_SASL_MECHANISM="kafka.sasl.mechanism";
-	private static final String KAFKA_CLIENT_SECURITY_LOGIN_CONFIG="kafka.client.security.login.config";
-	
+	// Kafka security
+	private static final String KAFKA_SECURITY = "kafka.security";
+	private static final String KAFKA_SECURITY_PROTOCOL = "kafka.security.protocol";
+	private static final String KAFKA_SASL_MECHANISM = "kafka.sasl.mechanism";
+	private static final String KAFKA_CLIENT_SECURITY_LOGIN_CONFIG = "kafka.client.security.login.config";
+
 	private static final String CONST_MONITORING = "MONITORING-";
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(KafkaWriter.class);
@@ -85,22 +87,40 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 
 	private void captureEvent(EntryEvent event) {
 		EntryEventImpl entryEventImpl = (EntryEventImpl) event;
-		VersionTag tag = entryEventImpl.getVersionTag(); 
+		VersionTag tag = entryEventImpl.getVersionTag();
 		long eventTimestamp = tag.getVersionTimeStamp();
-		long regionVersion = tag.getRegionVersion();
+		long eventRegionVersion = tag.getRegionVersion();
 		LOGGER.info("EntryEvent details: region: " + event.getRegion().getName() + " key: " + event.getKey().toString()
 				+ " operation: " + event.getOperation() + " timestamp: " + eventTimestamp);
 
 		if (!verifyEvent(event))
 			return;
 
-		LOGGER.info("Sending EntryEvent to Kafka from: region: " + event.getRegion().getName() + " with key: " + event.getKey().toString()
-				+ " operation: " + event.getOperation() + " timestamp: " + eventTimestamp);
+		LOGGER.info("Sending EntryEvent to Kafka from: region: " + event.getRegion().getName() + " with key: "
+				+ event.getKey().toString() + " operation: " + event.getOperation() + " timestamp: " + eventTimestamp);
 
 		Cache cache = CacheFactory.getAnyInstance();
-		Region<LatestTimestampKey, Long> latestTimestampRegion = cache.getRegion(LATEST_TIMESTAMP_REGION);
-		latestTimestampRegion.put(new LatestTimestampKey(event.getRegion().getName(), event.getKey().toString()),
-				eventTimestamp);
+		Region<LatestTimestampKey, PdxInstance> latestTimestampRegion = cache.getRegion(LATEST_TIMESTAMP_REGION);
+		LatestTimestampKey latestTimestampKey =new LatestTimestampKey(event.getRegion().getName(), event.getKey());
+		long regionRegionVersion = -1L;
+		if (latestTimestampRegion.containsKey(latestTimestampKey)){
+			Object latestTimestampObject = latestTimestampRegion.get(latestTimestampKey);
+			if (latestTimestampObject instanceof PdxInstance) {
+				  // get returned PdxInstance instead of domain object    
+				  PdxInstance latestTimestampPdxInstace = (PdxInstance)latestTimestampObject;
+				  regionRegionVersion = (Long) latestTimestampPdxInstace.getField("regionVersion");
+			}
+		}
+		
+		PdxInstance latestTimestampPdx = cache.createPdxInstanceFactory("com.garmin.gemfire.transfer.model.LatestTimestamp")
+				   .writeLong("latestTimestamp", eventTimestamp)
+				   .markIdentityField("latestTimestamp")
+				   .writeLong("regionVersion", regionRegionVersion)
+				   .markIdentityField("regionVersion")
+				   .create();
+		
+		latestTimestampRegion.put(new LatestTimestampKey(event.getRegion().getName(), event.getKey()),
+				latestTimestampPdx);
 
 		String topicName = event.getRegion().getName() + "-" + configData.getValue(GEMFIRE_CLUSTER_NAME);
 
@@ -111,9 +131,9 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 			Object key = event.getKey();
 			String keyType = key.getClass().getName();
 			Object obj = event.getNewValue();
-			String objType = obj.getClass().getName();
+			String objType = obj != null ? obj.getClass().getName() : "null";
 			jsonTransport = JSONTypedFormatter.toJsonTransport(key, keyType, obj, objType,
-					event.getOperation().toString(), event.getRegion().getName(), eventTimestamp, regionVersion);
+					event.getOperation().toString(), event.getRegion().getName(), eventTimestamp, eventRegionVersion);
 			sendToKafka(topicName, jsonTransport);
 		} catch (JsonProcessingException e) {
 			LOGGER.error("Error while parsing JSON object: " + event.getKey().toString() + ", for a region: " + region);
@@ -134,9 +154,9 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 		// “MONITORING-“, Ignore such updates
 		if (event.getKey().toString().startsWith(CONST_MONITORING))
 			return false;
-		
-		//Do not process CRUD operations
-		
+
+		// Do not process CRUD operations
+
 		Operation operation = event.getOperation();
 
 		if (!supportedOperations().contains(operation))
@@ -176,13 +196,15 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 
 	public void init(Properties arg0) {
 		// Configure the Producer
-		if(configData.getValue(KAFKA_SECURITY) !=null ) {
-			Boolean secure=new Boolean(configData.getValue(KAFKA_SECURITY));
-			LOGGER.info("Kafka security :"+secure);
+		if (configData.getValue(KAFKA_SECURITY) != null) {
+			Boolean secure = new Boolean(configData.getValue(KAFKA_SECURITY));
+			LOGGER.info("Kafka security :" + secure);
 			if (secure) {
-				System.setProperty(JaasUtils.JAVA_LOGIN_CONFIG_PARAM, configData.getValue(KAFKA_CLIENT_SECURITY_LOGIN_CONFIG));
-				kafkaConfigProperties.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, configData.getValue(KAFKA_SECURITY_PROTOCOL));
-				kafkaConfigProperties.put(SaslConfigs.SASL_MECHANISM,configData.getValue(KAFKA_SASL_MECHANISM));
+				System.setProperty(JaasUtils.JAVA_LOGIN_CONFIG_PARAM,
+						configData.getValue(KAFKA_CLIENT_SECURITY_LOGIN_CONFIG));
+				kafkaConfigProperties.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG,
+						configData.getValue(KAFKA_SECURITY_PROTOCOL));
+				kafkaConfigProperties.put(SaslConfigs.SASL_MECHANISM, configData.getValue(KAFKA_SASL_MECHANISM));
 			}
 		}
 		kafkaConfigProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -191,11 +213,14 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 		kafkaConfigProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KAFKA_VALUE_SERIALIZER);
 		kafkaConfigProperties.put(ProducerConfig.ACKS_CONFIG, configData.getValue(KAFKA_ACKNOWLEDGEMENTS));
 
-	/*	zkClient = new ZkClient(configData.getValue(ZOOKEEPER_HOSTS),
-				Integer.parseInt(configData.getValue(ZOOKEEPER_SESSION_TIMEOUT)),
-				Integer.parseInt(configData.getValue(ZOOKEEPER_CONNECTION_TIMEOUT)), ZKStringSerializer$.MODULE$);
-		zkUtils = new ZkUtils(zkClient, new ZkConnection(configData.getValue(ZOOKEEPER_HOSTS)),
-				Boolean.parseBoolean(configData.getValue(ZOOKEEPER_SECURED))); */
+		/*
+		 * zkClient = new ZkClient(configData.getValue(ZOOKEEPER_HOSTS),
+		 * Integer.parseInt(configData.getValue(ZOOKEEPER_SESSION_TIMEOUT)),
+		 * Integer.parseInt(configData.getValue(ZOOKEEPER_CONNECTION_TIMEOUT)),
+		 * ZKStringSerializer$.MODULE$); zkUtils = new ZkUtils(zkClient, new
+		 * ZkConnection(configData.getValue(ZOOKEEPER_HOSTS)),
+		 * Boolean.parseBoolean(configData.getValue(ZOOKEEPER_SECURED)));
+		 */
 		kafkaProducer = new KafkaProducer<String, String>(kafkaConfigProperties);
 
 	}

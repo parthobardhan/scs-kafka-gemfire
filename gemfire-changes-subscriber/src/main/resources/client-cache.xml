@@ -50,9 +50,9 @@
 		<gfe:locator host="olaxdd-itwgfsso00" port="10334" />
 		<gfe:locator host="olaxdd-itwgfsso01" port="10334" />
 	</gfe:pool>
-	
+	<gfe:transaction-manager/>	
 	<gfe:client-cache pdx-persistent="true"
-	pool-name="yellowCluster" pdx-serializer-ref="autoPdxSerializer">
+	pool-name="devSSOCluster" pdx-serializer-ref="autoPdxSerializer" pdx-read-serialized="true">
 	</gfe:client-cache>
 
 	<bean id="autoPdxSerializer" class="com.gemstone.gemfire.pdx.ReflectionBasedAutoSerializer">
