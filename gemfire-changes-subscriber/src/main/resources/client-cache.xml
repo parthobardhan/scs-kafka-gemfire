@@ -14,10 +14,6 @@
 	
 	<gfe:client-region id="garminCustomerNotes" shortcut="PROXY" />
 	
-	<gfe:client-region id="garminCustomerEmailIndex" shortcut="PROXY" />
-	
-	<gfe:client-region id="garminCustomerFSIIndex" shortcut="PROXY" />
-	
 	<gfe:client-region id="garminCustomerPreferenceTypes" shortcut="PROXY" />
 	
 	<gfe:client-region id="garminCustomerPreferences" shortcut="PROXY" />
@@ -81,8 +77,13 @@
 		<gfe:locator host="olaxdd-itwgfcustomer01" port="10334" />
 	</gfe:pool>
 	
+	<gfe:pool id="devDataCluster" subscription-enabled="true">
+		<gfe:locator host="olaxdd-itwgfdata00" port="10334" />
+		<gfe:locator host="olaxdd-itwgfdata01" port="10334" />
+	</gfe:pool>
+	
 	<gfe:client-cache pdx-persistent="true"
-	pool-name="devCustomerCluster" pdx-serializer-ref="autoPdxSerializer" pdx-read-serialized="true">
+	pool-name="devDataCluster" pdx-serializer-ref="autoPdxSerializer" pdx-read-serialized="true">
 	</gfe:client-cache>
 
 	<bean id="autoPdxSerializer" class="com.gemstone.gemfire.pdx.ReflectionBasedAutoSerializer">
