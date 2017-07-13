@@ -100,7 +100,7 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 				+ event.getKey().toString() + " operation: " + event.getOperation() + " timestamp: " + eventTimestamp);
 
 		Cache cache = CacheFactory.getAnyInstance();
-		Region<LatestTimestampKey, PdxInstance> latestTimestampRegion = cache.getRegion(LATEST_TIMESTAMP_REGION);
+		Region latestTimestampRegion = cache.getRegion(LATEST_TIMESTAMP_REGION);
 		LatestTimestampKey latestTimestampKey =new LatestTimestampKey(event.getRegion().getName(), event.getKey());
 		long regionRegionVersion = -1L;
 		if (latestTimestampRegion.containsKey(latestTimestampKey)){
@@ -112,15 +112,17 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 			}
 		}
 		
-		PdxInstance latestTimestampPdx = cache.createPdxInstanceFactory("com.garmin.gemfire.transfer.model.LatestTimestamp")
-				   .writeLong("latestTimestamp", eventTimestamp)
-				   .markIdentityField("latestTimestamp")
-				   .writeLong("regionVersion", regionRegionVersion)
-				   .markIdentityField("regionVersion")
-				   .create();
+		LatestTimestamp latestTimestamp = new LatestTimestamp(eventTimestamp, regionRegionVersion);
+		
+//		PdxInstance latestTimestampPdx = cache.createPdxInstanceFactory("com.garmin.gemfire.transfer.model.LatestTimestamp")
+//				   .writeLong("latestTimestamp", eventTimestamp)
+//				   .markIdentityField("latestTimestamp")
+//				   .writeLong("regionVersion", regionRegionVersion)
+//				   .markIdentityField("regionVersion")
+//				   .create();
 		
 		latestTimestampRegion.put(new LatestTimestampKey(event.getRegion().getName(), event.getKey()),
-				latestTimestampPdx);
+				latestTimestamp);
 
 		String topicName = event.getRegion().getName() + "-" + configData.getValue(GEMFIRE_CLUSTER_NAME);
 
@@ -159,8 +161,11 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 
 		Operation operation = event.getOperation();
 
-		if (!supportedOperations().contains(operation))
+		if (!supportedOperations().contains(operation)) {
+			LOGGER.warn("Unsupported operation detected: region: " + event.getRegion().getName() + " key: " 
+					+ event.getKey().toString() + " operation: " + event.getOperation());
 			return false;
+		}
 
 		return true;
 	}
