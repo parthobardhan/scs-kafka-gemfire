@@ -15,12 +15,14 @@ import com.gemstone.gemfire.cache.client.ClientCache;
 
 @EnableBinding(Sink.class)
 @EnableConfigurationProperties(GemfireSinkProperties.class)
+
 public class GemfireSinkConfig {
 
 	private static Logger logger = LoggerFactory.getLogger(GemfireSinkConfig.class);
-	ApplicationContext context = new ClassPathXmlApplicationContext("client-cache.xml");
+	ApplicationContext context = new ClassPathXmlApplicationContext("client-cache-"+System.getProperty("garmin.gemfire.env")+".xml");
 	ClientCache clientCache = context.getBean(ClientCache.class);
 	
+
 	@ServiceActivator(inputChannel = Sink.INPUT)
 	@Bean
 	public GemfireSinkHandler gemfireSinkHandler() {
@@ -30,6 +32,7 @@ public class GemfireSinkConfig {
 	@Bean
 	public MessageHandler messageHandler() {
 		GemfireMessageHandler messageHandler = new GemfireMessageHandler(clientCache);
+		logger.debug("Client cache loaded ");
 		return messageHandler;
 	}
 	
