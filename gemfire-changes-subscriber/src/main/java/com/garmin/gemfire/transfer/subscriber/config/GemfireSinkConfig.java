@@ -18,7 +18,8 @@ import com.gemstone.gemfire.cache.client.ClientCache;
 public class GemfireSinkConfig {
 
 	private static Logger logger = LoggerFactory.getLogger(GemfireSinkConfig.class);
-	ApplicationContext context = new ClassPathXmlApplicationContext("client-cache.xml");
+	ApplicationContext context = new ClassPathXmlApplicationContext("client-cache-"+System.getProperty("garmin.gemfire.env")+".xml");
+	
 	ClientCache clientCache = context.getBean(ClientCache.class);
 	
 	@ServiceActivator(inputChannel = Sink.INPUT)
