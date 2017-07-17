@@ -26,11 +26,6 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.garmin.gemfire.transfer</groupId>
-				<artifactId>spring-cloud-gemfire-support</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
 				<groupId>org.springframework.data</groupId>
 				<artifactId>spring-data-gemfire</artifactId>
 				<version>${spring-data-gemfire.version}</version>
@@ -56,6 +51,5 @@
 		<module>gemfire-client-dataloader</module>
 		<module>gemfire-client-dataremover</module>
 		<module>gemfire-transfer-cachelistener</module>
-		<module>spring-cloud-gemfire-support</module>
 	</modules>
 </project>
