@@ -9,7 +9,7 @@ badopt() { echoerr "$@"; echo ""; HELP='true'; }
 
 DEPLOYMENT_LOCATION=""
 APP_NAME="gemfire-changes-subscriber"
-LOG_LOCATION="."
+LOG_LOCATION="/var/log/kafka-consumers"
 
 while test $# -gt 0; do
   case "$1" in
@@ -103,6 +103,7 @@ START_COMMAND="java -Djava.security.auth.login.config=/etc/config/kafka_client_j
 START_COMMAND="$START_COMMAND --spring.kafka.bootstrap-servers=$KAFKA_BOOTSTRAP_SERVERS"
 START_COMMAND="$START_COMMAND --spring.cloud.stream.kafka.binder.zkNodes=$ZOOKEEPER_NODES"
 START_COMMAND="$START_COMMAND --spring.cloud.stream.bindings.input.destination=$DESTINATION"
+START_COMMAND="$START_COMMAND --logging.file=$LOG_LOCATION/$DESTINATION"
 for host in $BRIDGE_SERVERS; do
   # Copy jar to the servers
   if [[ `ssh-copy-id -n $host 2>&1 | grep -c "All keys were skipped"` -lt 1 ]]; then
@@ -131,6 +132,6 @@ for host in $BRIDGE_SERVERS; do
       PORT=$((PORT+1))
     done
     echo "Starting app $DESTINATION on $host at port $PORT..."
-    ssh -q $host "nohup $START_COMMAND --server.port=$PORT > $LOG_LOCATION/$DESTINATION-$i.out 2>$LOG_LOCATION/$DESTINATION-$i.err < /dev/null &"
+    ssh -q $host "nohup $START_COMMAND --server.port=$PORT > $LOG_LOCATION/$DESTINATION-$PORT.out 2>$LOG_LOCATION/$DESTINATION-$PORT.err < /dev/null &"
   done
 done
