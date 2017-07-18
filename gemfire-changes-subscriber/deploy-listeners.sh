@@ -10,6 +10,8 @@ badopt() { echoerr "$@"; echo ""; HELP='true'; }
 DEPLOYMENT_LOCATION=""
 APP_NAME="gemfire-changes-subscriber"
 LOG_LOCATION="/var/log/kafka-consumers"
+GEMFIRE_PROPERTIES="/web/secure-config/security/gemfire.properties"
+GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity.properties"
 
 while test $# -gt 0; do
   case "$1" in
@@ -17,6 +19,8 @@ while test $# -gt 0; do
       HELP='true'; break ;;
     -a)
       ADD_FLAG='true'; shift ;;
+    -s)
+      SECURITY_FLAG='true'; shift ;;
     -n)
       shift
       if test $# -gt 0; then
@@ -35,11 +39,17 @@ while test $# -gt 0; do
         break
       fi
       shift ;;
+    -p)
+      shift
+      if test $# -gt 0; then
+        SPRING_PROFILE_ENV=$1
+      else
+        badopt "Please provide a server list with the -p option"
+        break
+      fi
+      shift ;;
     *)
-      if [[ -z $ENV ]]; then
-        ENV=$1
-        shift
-      elif [[ -z $DESTINATION ]]; then
+      if [[ -z $DESTINATION ]]; then
         DESTINATION=$1
         shift
       else
@@ -55,29 +65,30 @@ while test $# -gt 0; do
   esac
 done
 
-if [[ -z $ENV || -z $DESTINATION || $HELP ]]; then
+if [[ -z $SPRING_PROFILE_ENV || -z $DESTINATION || $HELP ]]; then
   echoerr "Usage: $0 [OPTIONS] (poc|dev|test|stage|prod) destination"
   echoerr 'Optional Flags:'
   echoerr '  -a                          Add new instances without removing old ones'
   echoerr '  -n [int]                    Number of instances to run per server'
   echoerr '  -b "host1:port host2:port"  List of bridge servers to deploy listener to'
+  echoerr '  -p "profile"                Spring profile to run the subscriber with'
+  echoerr '  -s                          Enable gemfire security configuration'
   echoerr '  -h, --help                  Display this help message'
   echoerr ''
   echoerr 'Examples:'
-  echoerr "    $0 dev sso_rememberMeTicket-dev-data"
-  echoerr "    $0 dev sso_rememberMeTicket-dev-data -a -n 2 -b 'olaxta-itwgfbridge00 olaxta-itwgfbridge01'"
+  echoerr "    $0 sso_rememberMeTicket-dev-data -p dev"
+  echoerr "    $0 sso_rememberMeTicket-dev-data -a -n 2 -b 'olaxta-itwgfbridge00 olaxta-itwgfbridge01'"
   exit 1
 fi
 
-[[ -z INSTANCE_COUNT ]] && INSTANCE_COUNT=1
-if [[ "$ENV" == "poc" || "$ENV" == "dev" || "$ENV" == "test" || "$ENV" == "stage" ]]; then
+[[ -z $INSTANCE_COUNT ]] && INSTANCE_COUNT=1
+DEPLOYMENT_ENV=`echo "$SPRING_PROFILE_ENV" | cut -d'-' -f1`
+if [[ "$DEPLOYMENT_ENV" == "poc" || "$DEPLOYMENT_ENV" == "dev" || "$DEPLOYMENT_ENV" == "test" || "$DEPLOYMENT_ENV" == "stage" ]]; then
   [[ -z $BRIDGE_SERVERS ]]          && BRIDGE_SERVERS="olaxta-itwgfbridge00 olaxta-itwgfbridge01"
-  [[ -z $KAFKA_BOOTSTRAP_SERVERS ]] && KAFKA_BOOTSTRAP_SERVERS="olaxda-itwgfkafka07.garmin.com:9092,olaxda-itwgfkafka08.garmin.com:9092,olaxda-itwgfkafka09.garmin.com:9092"
-  [[ -z $ZOOKEEPER_NODES ]]         && ZOOKEEPER_NODES="olaxda-itwgfkafka07.garmin.com:2181,olaxda-itwgfkafka08.garmin.com:2181,olaxda-itwgfkafka09.garmin.com:2181"
-elif [[ "$ENV" == "prod" ]]; then
+elif [[ "$DEPLOYMENT_ENV" == "prod" ]]; then
   echoerr "TODO: Fill in prod details"; exit 1;
 else
-  echoerr "Unknown environment '$ENV' provided. Exiting..."
+  echoerr "Unknown environment '$SPRING_PROFILE_ENV' provided. Exiting..."
   exit 1
 fi
 
@@ -99,11 +110,11 @@ if [[ "$INPUT" == "y" ]]; then
 fi
 
 # DEPLOY
-START_COMMAND="java -Djava.security.auth.login.config=/etc/config/kafka_client_jaas_plain.conf -jar $APP_NAME*.jar"
-START_COMMAND="$START_COMMAND --spring.kafka.bootstrap-servers=$KAFKA_BOOTSTRAP_SERVERS"
-START_COMMAND="$START_COMMAND --spring.cloud.stream.kafka.binder.zkNodes=$ZOOKEEPER_NODES"
+START_COMMAND="java -Djava.security.auth.login.config=/etc/config/kafka_client_jaas_plain.conf"
+[[ -z $SECURITY_FLAG ]] || START_COMMAND="$START_COMMAND -DgemfirePropertyFile=$GEMFIRE_PROPERTIES -DgemfireSecurityPropertyFile=$GEMFIRE_SECURITY_PROPERTIES"
+START_COMMAND="$START_COMMAND -Dspring.profiles.active=$SPRING_PROFILE_ENV -jar $APP_NAME*.jar"
 START_COMMAND="$START_COMMAND --spring.cloud.stream.bindings.input.destination=$DESTINATION"
-START_COMMAND="$START_COMMAND --logging.file=$LOG_LOCATION/$DESTINATION"
+START_COMMAND="$START_COMMAND --logging.file=$LOG_LOCATION/$DESTINATION.log"
 for host in $BRIDGE_SERVERS; do
   # Copy jar to the servers
   if [[ `ssh-copy-id -n $host 2>&1 | grep -c "All keys were skipped"` -lt 1 ]]; then
@@ -114,7 +125,7 @@ for host in $BRIDGE_SERVERS; do
     fi
   fi
   scp -q target/$APP_NAME*.jar $host:$DEPLOYMENT_LOCATION
-  
+
   # Remove previous instances of application
   if [[ -z ADD_FLAG || "$ADD_FLAG" != "true" ]]; then
     PIDS_TO_DELETE=`ssh -q $host "ps -ef | grep java | grep -v grep | grep $DESTINATION" |  tr -s ' ' | cut -d' ' -f2`
@@ -123,8 +134,8 @@ for host in $BRIDGE_SERVERS; do
       ssh -q $host "kill `echo $PIDS_TO_DELETE`"
     fi
   fi
-  
-  for (( i=1; i<=$INSTANCE_COUNT; i++ )); do
+
+  for (( i = 1; i <= $INSTANCE_COUNT; i++ )); do
     # Find an open port and start the listener
     PORT=8081
     PORTS_TAKEN=`ssh -q $host "ps -ef | grep java | egrep -o '\-\-server\.port=[0-9]+' | egrep -o '[0-9]+'"`
@@ -132,6 +143,6 @@ for host in $BRIDGE_SERVERS; do
       PORT=$((PORT+1))
     done
     echo "Starting app $DESTINATION on $host at port $PORT..."
-    ssh -q $host "nohup $START_COMMAND --server.port=$PORT > $LOG_LOCATION/$DESTINATION-$PORT.out 2>$LOG_LOCATION/$DESTINATION-$PORT.err < /dev/null &"
+    ssh -q $host "nohup $START_COMMAND --server.port=$PORT >/dev/null 2>/dev/null </dev/null &"
   done
 done
