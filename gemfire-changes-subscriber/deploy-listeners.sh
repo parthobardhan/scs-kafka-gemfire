@@ -10,8 +10,6 @@ badopt() { echoerr "$@"; echo ""; HELP='true'; }
 DEPLOYMENT_LOCATION=""
 APP_NAME="gemfire-changes-subscriber"
 LOG_LOCATION="/var/log/kafka-consumers"
-GEMFIRE_PROPERTIES="/web/secure-config/security/gemfire.properties"
-GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity.properties"
 
 while test $# -gt 0; do
   case "$1" in
@@ -84,7 +82,8 @@ fi
 [[ -z $INSTANCE_COUNT ]] && INSTANCE_COUNT=1
 DEPLOYMENT_ENV=`echo "$SPRING_PROFILE_ENV" | cut -d'-' -f1`
 if [[ "$DEPLOYMENT_ENV" == "poc" || "$DEPLOYMENT_ENV" == "dev" || "$DEPLOYMENT_ENV" == "test" || "$DEPLOYMENT_ENV" == "stage" ]]; then
-  [[ -z $BRIDGE_SERVERS ]]          && BRIDGE_SERVERS="olaxta-itwgfbridge00 olaxta-itwgfbridge01"
+  [[ -z $GEMFIRE_SECURITY_PROPERTIES ]] && GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-test-data.properties"
+  [[ -z $BRIDGE_SERVERS ]]              && BRIDGE_SERVERS="olaxta-itwgfbridge00 olaxta-itwgfbridge01"
 elif [[ "$DEPLOYMENT_ENV" == "prod" ]]; then
   echoerr "TODO: Fill in prod details"; exit 1;
 else
@@ -110,8 +109,9 @@ if [[ "$INPUT" == "y" ]]; then
 fi
 
 # DEPLOY
-START_COMMAND="java -Djava.security.auth.login.config=/etc/config/kafka_client_jaas_plain.conf"
-[[ -z $SECURITY_FLAG ]] || START_COMMAND="$START_COMMAND -DgemfirePropertyFile=$GEMFIRE_PROPERTIES -DgemfireSecurityPropertyFile=$GEMFIRE_SECURITY_PROPERTIES"
+START_COMMAND="java -Djava.security.auth.login.config=/web/secure-config/gemfire/kafka_client_jaas_plain.conf"
+[[ -z $SECURITY_FLAG ]] || START_COMMAND="$START_COMMAND -DgemfireSecurityPropertyFile=$GEMFIRE_SECURITY_PROPERTIES"
+START_COMMAND="$START_COMMAND -Dspring.config.location=/web/config/"
 START_COMMAND="$START_COMMAND -Dspring.profiles.active=$SPRING_PROFILE_ENV -jar $APP_NAME*.jar"
 START_COMMAND="$START_COMMAND --spring.cloud.stream.bindings.input.destination=$DESTINATION"
 START_COMMAND="$START_COMMAND --logging.file=$LOG_LOCATION/$DESTINATION.log"
