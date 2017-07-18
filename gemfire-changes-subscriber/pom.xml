@@ -57,6 +57,10 @@
 			<artifactId>gemfire-transfer-commons</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.garmin.gemfire.transfer</groupId>
+			<artifactId>gemfire-artifacts</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>

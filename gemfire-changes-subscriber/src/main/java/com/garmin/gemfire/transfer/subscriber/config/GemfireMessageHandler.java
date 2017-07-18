@@ -10,8 +10,6 @@ import com.garmin.gemfire.transfer.keys.LatestTimestampKey;
 import com.garmin.gemfire.transfer.model.LatestTimestamp;
 import com.garmin.gemfire.transfer.model.TransportRecord;
 import com.garmin.gemfire.transfer.util.JSONTypedFormatter;
-import com.gemstone.gemfire.cache.CacheTransactionManager;
-import com.gemstone.gemfire.cache.CommitConflictException;
 import com.gemstone.gemfire.cache.Operation;
 import com.gemstone.gemfire.cache.Region;
 import com.gemstone.gemfire.cache.client.ClientCache;

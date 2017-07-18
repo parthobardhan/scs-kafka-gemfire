@@ -2,19 +2,16 @@ package com.garmin.gemfire.transfer.subscriber.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties("gemfire")
+@ConfigurationProperties("app")
 public class GemfireSinkProperties {
 
-	/**
-	 * The region name.
-	 */
-	private String regionName;
+	private String clientCacheXmlFile;
 
-	public String getRegionName() {
-		return regionName;
+	public String getClientCacheXmlFile() {
+		return clientCacheXmlFile;
 	}
 
-	public void setRegionName(String regionName) {
-		this.regionName = regionName;
+	public void setClientCacheXmlFile(String clientCacheXmlFile) {
+		this.clientCacheXmlFile = clientCacheXmlFile;
 	}
 }
