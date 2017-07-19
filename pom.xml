@@ -8,7 +8,7 @@
 	</parent>
 	<groupId>com.garmin.gemfire.transfer</groupId>
 	<artifactId>gemfire-transfer-parent</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>pom</packaging>
 	<name>gemfire-transfer-parent</name>
 	<description>parent class to store modules</description>
@@ -40,11 +40,6 @@
 				<artifactId>gemfire-server-boot</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>com.garmin.gemfire.transfer</groupId>
-				<artifactId>gemfire-artifacts</artifactId>
-				<version>${project.version}</version>
-			</dependency>
 			<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
@@ -61,6 +56,5 @@
 		<module>gemfire-client-dataloader</module>
 		<module>gemfire-client-dataremover</module>
 		<module>gemfire-transfer-cachelistener</module>
-		<module>gemfire-artifacts</module>
 	</modules>
 </project>

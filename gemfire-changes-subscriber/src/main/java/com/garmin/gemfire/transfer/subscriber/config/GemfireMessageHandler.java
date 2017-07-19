@@ -7,13 +7,11 @@ import org.springframework.messaging.Message;
 
 import com.garmin.gemfire.transfer.common.TransferConstants;
 import com.garmin.gemfire.transfer.keys.LatestTimestampKey;
-import com.garmin.gemfire.transfer.model.LatestTimestamp;
 import com.garmin.gemfire.transfer.model.TransportRecord;
 import com.garmin.gemfire.transfer.util.JSONTypedFormatter;
 import com.gemstone.gemfire.cache.Operation;
 import com.gemstone.gemfire.cache.Region;
 import com.gemstone.gemfire.cache.client.ClientCache;
-import com.gemstone.gemfire.pdx.PdxInstance;
 
 public class GemfireMessageHandler extends AbstractMessageHandler {
 
@@ -33,59 +31,47 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 		TransportRecord transportRecord = JSONTypedFormatter.transportRecordFromJson(clientCache, jsonTransport);
 		Object key = transportRecord.getKey();
 		long messageLatestTimestamp = transportRecord.getTimestamp();
-		long messageRegionVersion = transportRecord.getRegionVersion();
 		String region = transportRecord.getRegion();
 		String operation = transportRecord.getOperation();
 
 		logger.debug("Received message with " + operation + " operation on Region :" + region + " for key: " + key
-				+ " with timestamp: " + messageLatestTimestamp + " and messageRegionVersion: " + messageRegionVersion);
+				+ " with timestamp: " + messageLatestTimestamp);
 
 		LatestTimestampKey latestTimestampKey = new LatestTimestampKey(region, key);
 
 		boolean shouldProcessMessage = false;
 		if (latestTimestampRegion.containsKeyOnServer(latestTimestampKey)) {
-			Object latestTimestampObject = latestTimestampRegion.get(latestTimestampKey);
-			PdxInstance latestTimestampPdxInstace = (PdxInstance) latestTimestampObject;
-			long regionRegionVersion = (Long) latestTimestampPdxInstace.getField("regionVersion");
-			long regionLatestTimestamp = (Long) latestTimestampPdxInstace.getField("latestTimestamp");
+			long regionLatestTimestamp = (long) latestTimestampRegion.get(latestTimestampKey);
 
-			logger.debug("Message with " + operation + " operation on Region :" + region + "for key " + key
-					+ " with timestamp on message: " + messageLatestTimestamp + " while timestamp on region is: "
-					+ regionLatestTimestamp + " regionVersion in message: " + messageRegionVersion
-					+ " while regionVersion on region is: " + regionRegionVersion);
-			if (messageLatestTimestamp > regionLatestTimestamp && messageRegionVersion > regionRegionVersion) {
-				logger.debug("Incoming message is more recent, so should be processing Message");
-				LatestTimestamp latestTimestamp = new LatestTimestamp(messageLatestTimestamp, messageRegionVersion);
-				latestTimestampRegion.put(latestTimestampKey, latestTimestamp);
+			if (messageLatestTimestamp > regionLatestTimestamp) {
+				logger.debug("Message for Region : " + region + " with operation: " + operation + " for key: " + key
+						+ " with timestamp: " + messageLatestTimestamp
+						+ "is more recent than object on region with timestamp: " + regionLatestTimestamp
+						+ ", so should be processing Message");
+				latestTimestampRegion.put(latestTimestampKey, messageLatestTimestamp);
 				shouldProcessMessage = true;
 			} else {
 				logger.info("The message with:" + key + " for region :" + region + " with message timestamp: "
-						+ messageLatestTimestamp + " and message regionVersion: " + messageRegionVersion
-						+ " is earlier than the region LatestTimestamp : " + regionLatestTimestamp
-						+ " and region RegionVersion: " + regionRegionVersion + ", hence not updating to region");
+						+ messageLatestTimestamp + " is earlier than the region LatestTimestamp : "
+						+ regionLatestTimestamp + ", so should not be processing message ");
 				shouldProcessMessage = false;
 			}
 		} else {
 			logger.debug("key " + latestTimestampKey.toString()
 					+ "does not exist on server, so should be processing Message");
-			LatestTimestamp latestTimestamp = new LatestTimestamp(messageLatestTimestamp, messageRegionVersion);
-			latestTimestampRegion.put(latestTimestampKey, latestTimestamp);
+			latestTimestampRegion.put(latestTimestampKey, messageLatestTimestamp);
 			shouldProcessMessage = true;
 		}
 		if (shouldProcessMessage) {
 			logger.debug("processing message with key: " + latestTimestampKey.toString() + " operation: "
-					+ transportRecord.getOperation() + " messageLatestTimestamp: " + messageLatestTimestamp
-					+ " messageRegionVersion" + messageRegionVersion);
+					+ transportRecord.getOperation() + " messageLatestTimestamp: " + messageLatestTimestamp);
 			processMessage(latestTimestampKey, transportRecord.getObject(), transportRecord.getOperation(),
-					messageLatestTimestamp, messageRegionVersion);
+					messageLatestTimestamp);
 		}
 	}
 
-	private void processMessage(LatestTimestampKey latestTimestampKey, Object value, String operation, long timestamp,
-			long regionVersion) throws InterruptedException {
-		logger.debug("Updated timestamp on latestTimestamp region for region " + latestTimestampKey.getRegion()
-				+ " key: " + latestTimestampKey.getKey() + " to: " + timestamp);
-
+	private void processMessage(LatestTimestampKey latestTimestampKey, Object value, String operation, long timestamp)
+			throws InterruptedException {
 		Region clientRegion = clientCache.getRegion(latestTimestampKey.getRegion());
 
 		if (Operation.CREATE.toString().equals(operation) || Operation.PUTALL_CREATE.toString().equals(operation)
