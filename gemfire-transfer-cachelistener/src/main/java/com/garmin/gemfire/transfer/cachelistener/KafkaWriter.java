@@ -19,7 +19,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.garmin.common.utils.config.ConfigurationData;
 import com.garmin.gemfire.transfer.common.TransferConstants;
 import com.garmin.gemfire.transfer.keys.LatestTimestampKey;
-import com.garmin.gemfire.transfer.model.LatestTimestamp;
 import com.garmin.gemfire.transfer.util.JSONTypedFormatter;
 import com.gemstone.gemfire.cache.Cache;
 import com.gemstone.gemfire.cache.CacheFactory;
@@ -30,7 +29,6 @@ import com.gemstone.gemfire.cache.Region;
 import com.gemstone.gemfire.cache.util.CacheListenerAdapter;
 import com.gemstone.gemfire.internal.cache.EntryEventImpl;
 import com.gemstone.gemfire.internal.cache.versions.VersionTag;
-import com.gemstone.gemfire.pdx.PdxInstance;
 
 import kafka.utils.ZkUtils;
 
@@ -90,55 +88,36 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 		VersionTag tag = entryEventImpl.getVersionTag();
 		long eventTimestamp = tag.getVersionTimeStamp();
 		long eventRegionVersion = tag.getRegionVersion();
-		LOGGER.info("EntryEvent details: region: " + event.getRegion().getName() + " key: " + event.getKey().toString()
-				+ " operation: " + event.getOperation() + " timestamp: " + eventTimestamp);
 
-		if (!verifyEvent(event))
+		if (!verifyEvent(event)) {
 			return;
-
-		LOGGER.info("Sending EntryEvent to Kafka from: region: " + event.getRegion().getName() + " with key: "
-				+ event.getKey().toString() + " operation: " + event.getOperation() + " timestamp: " + eventTimestamp);
+		}
 
 		Cache cache = CacheFactory.getAnyInstance();
 		Region latestTimestampRegion = cache.getRegion(LATEST_TIMESTAMP_REGION);
-		LatestTimestampKey latestTimestampKey =new LatestTimestampKey(event.getRegion().getName(), event.getKey());
-		long regionRegionVersion = -1L;
-		if (latestTimestampRegion.containsKey(latestTimestampKey)){
-			Object latestTimestampObject = latestTimestampRegion.get(latestTimestampKey);
-			if (latestTimestampObject instanceof PdxInstance) {
-				  // get returned PdxInstance instead of domain object    
-				  PdxInstance latestTimestampPdxInstace = (PdxInstance)latestTimestampObject;
-				  regionRegionVersion = (Long) latestTimestampPdxInstace.getField("regionVersion");
-			}
-		}
-		
-		LatestTimestamp latestTimestamp = new LatestTimestamp(eventTimestamp, regionRegionVersion);
-		
-//		PdxInstance latestTimestampPdx = cache.createPdxInstanceFactory("com.garmin.gemfire.transfer.model.LatestTimestamp")
-//				   .writeLong("latestTimestamp", eventTimestamp)
-//				   .markIdentityField("latestTimestamp")
-//				   .writeLong("regionVersion", regionRegionVersion)
-//				   .markIdentityField("regionVersion")
-//				   .create();
-		
-		latestTimestampRegion.put(new LatestTimestampKey(event.getRegion().getName(), event.getKey()),
-				latestTimestamp);
-
+		LatestTimestampKey latestTimestampKey = new LatestTimestampKey(event.getRegion().getName(), event.getKey());
 		String topicName = event.getRegion().getName() + "-" + configData.getValue(GEMFIRE_CLUSTER_NAME);
-
 		String region = event.getRegion().getName();
+		Object key = event.getKey();
+		String keyType = key.getClass().getName();
+		Object obj = event.getNewValue();
+		String objType = obj != null ? obj.getClass().getName() : "null";
 
 		String jsonTransport;
 		try {
-			Object key = event.getKey();
-			String keyType = key.getClass().getName();
-			Object obj = event.getNewValue();
-			String objType = obj != null ? obj.getClass().getName() : "null";
 			jsonTransport = JSONTypedFormatter.toJsonTransport(key, keyType, obj, objType,
 					event.getOperation().toString(), event.getRegion().getName(), eventTimestamp, eventRegionVersion);
+			LOGGER.info("Sending EntryEvent to Kafka from region: " + event.getRegion().getName() + " with key: "
+					+ event.getKey().toString() + " having operation: " + event.getOperation() + ", timestamp: "
+					+ eventTimestamp + ", and updating latestTimestamp region");
+			latestTimestampRegion.put(new LatestTimestampKey(event.getRegion().getName(), event.getKey()),
+					eventTimestamp);
 			sendToKafka(topicName, jsonTransport);
 		} catch (JsonProcessingException e) {
 			LOGGER.error("Error while parsing JSON object: " + event.getKey().toString() + ", for a region: " + region);
+			e.printStackTrace();
+		} catch (Exception e) {
+			LOGGER.error("Error in Kafka Writer for Key: " + event.getKey().toString() + ", for a region: " + region);
 			e.printStackTrace();
 		}
 
@@ -148,21 +127,23 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 		// To avoid feedback loop between clusters
 		if (event.isCallbackArgumentAvailable()) {
 			if (event.getCallbackArgument() != null) {
-				if (TransferConstants.UPDATE_SOURCE.equals(event.getCallbackArgument().toString()))
+				if (TransferConstants.UPDATE_SOURCE.equals(event.getCallbackArgument().toString())) {
 					return false;
+				}
 			}
 		}
 		// Some applications puts bogus string with key starts with
 		// “MONITORING-“, Ignore such updates
-		if (event.getKey().toString().startsWith(CONST_MONITORING))
+		if (event.getKey().toString().startsWith(CONST_MONITORING)) {
 			return false;
+		}
 
-		// Do not process CRUD operations
+		// Process only CRUD operations
 
 		Operation operation = event.getOperation();
 
 		if (!supportedOperations().contains(operation)) {
-			LOGGER.warn("Unsupported operation detected: region: " + event.getRegion().getName() + " key: " 
+			LOGGER.warn("Unsupported operation detected: region: " + event.getRegion().getName() + " key: "
 					+ event.getKey().toString() + " operation: " + event.getOperation());
 			return false;
 		}
@@ -187,8 +168,6 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 	}
 
 	private void sendToKafka(String topicName, String message) {
-		// Externalize the properties with bookstrap, acks, block on buffer,
-		// retries etc.
 		try {
 			ProducerRecord<String, String> rec = new ProducerRecord<String, String>(topicName, message);
 			kafkaProducer.send(rec);
@@ -217,15 +196,6 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 		kafkaConfigProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KAFKA_KEY_SERIALIZER);
 		kafkaConfigProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KAFKA_VALUE_SERIALIZER);
 		kafkaConfigProperties.put(ProducerConfig.ACKS_CONFIG, configData.getValue(KAFKA_ACKNOWLEDGEMENTS));
-
-		/*
-		 * zkClient = new ZkClient(configData.getValue(ZOOKEEPER_HOSTS),
-		 * Integer.parseInt(configData.getValue(ZOOKEEPER_SESSION_TIMEOUT)),
-		 * Integer.parseInt(configData.getValue(ZOOKEEPER_CONNECTION_TIMEOUT)),
-		 * ZKStringSerializer$.MODULE$); zkUtils = new ZkUtils(zkClient, new
-		 * ZkConnection(configData.getValue(ZOOKEEPER_HOSTS)),
-		 * Boolean.parseBoolean(configData.getValue(ZOOKEEPER_SECURED)));
-		 */
 		kafkaProducer = new KafkaProducer<String, String>(kafkaConfigProperties);
 
 	}
