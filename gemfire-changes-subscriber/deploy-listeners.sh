@@ -64,31 +64,47 @@ while test $# -gt 0; do
 done
 
 if [[ -z $SPRING_PROFILE_ENV || -z $DESTINATION || $HELP ]]; then
-  echoerr "Usage: $0 [OPTIONS] (poc|dev|test|stage|prod) destination"
+  echoerr "Usage: $0 [OPTIONS] destination -p spring-profile"
+  echoerr '  -p "profile"                Spring profile to run the subscriber with'
   echoerr 'Optional Flags:'
   echoerr '  -a                          Add new instances without removing old ones'
   echoerr '  -n [int]                    Number of instances to run per server'
   echoerr '  -b "host1:port host2:port"  List of bridge servers to deploy listener to'
-  echoerr '  -p "profile"                Spring profile to run the subscriber with'
   echoerr '  -s                          Enable gemfire security configuration'
   echoerr '  -h, --help                  Display this help message'
   echoerr ''
   echoerr 'Examples:'
-  echoerr "    $0 sso_rememberMeTicket-dev-data -p dev"
-  echoerr "    $0 sso_rememberMeTicket-dev-data -a -n 2 -b 'olaxta-itwgfbridge00 olaxta-itwgfbridge01'"
+  echoerr "    $0 sso_rememberMeTicket-dev-data -p dev-data-to-sso"
+  echoerr "    $0 sso_rememberMeTicket-dev-data -p dev-data-to-sso -a -n 2 -b 'olaxta-itwgfbridge00 olaxta-itwgfbridge01'"
   exit 1
 fi
 
+# Set environment specific configuration
 [[ -z $INSTANCE_COUNT ]] && INSTANCE_COUNT=1
 DEPLOYMENT_ENV=`echo "$SPRING_PROFILE_ENV" | cut -d'-' -f1`
-if [[ "$DEPLOYMENT_ENV" == "poc" || "$DEPLOYMENT_ENV" == "dev" || "$DEPLOYMENT_ENV" == "test" || "$DEPLOYMENT_ENV" == "stage" ]]; then
-  [[ -z $GEMFIRE_SECURITY_PROPERTIES ]] && GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-test-data.properties"
-  [[ -z $BRIDGE_SERVERS ]]              && BRIDGE_SERVERS="olaxta-itwgfbridge00 olaxta-itwgfbridge01"
+if [[ "$DEPLOYMENT_ENV" == "poc" || "$DEPLOYMENT_ENV" == "dev" ]]; then
+  [[ -z $KAFKA_JAAS_CONFIG ]]           && KAFKA_JAAS_CONFIG="/etc/config/kafka_client_jaas_plain.conf"
+  [[ -z $GEMFIRE_SECURITY_PROPERTIES ]] && GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-dev.properties"
+  [[ -z $BRIDGE_SERVERS ]]              && BRIDGE_SERVERS="olaxta-itwgfbridge00"
+elif [[ "$DEPLOYMENT_ENV" == "test" ]]; then
+  [[ -z $KAFKA_JAAS_CONFIG ]]           && KAFKA_JAAS_CONFIG="/web/secure-config/gemfire/kafka_client_jaas_plain.conf"
+  [[ -z $GEMFIRE_SECURITY_PROPERTIES ]] && GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-test.properties"
+  [[ -z $BRIDGE_SERVERS ]]              && BRIDGE_SERVERS="olaxta-itwgfbridge00"
+elif [[ "$DEPLOYMENT_ENV" == "stage" ]]; then
+  [[ -z $KAFKA_JAAS_CONFIG ]]           && KAFKA_JAAS_CONFIG="/web/secure-config/gemfire/kafka_client_jaas_plain.conf"
+  [[ -z $GEMFIRE_SECURITY_PROPERTIES ]] && GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-stage.properties"
+  [[ -z $BRIDGE_SERVERS ]]              && BRIDGE_SERVERS="olaxsa-itwgfbridge00"
 elif [[ "$DEPLOYMENT_ENV" == "prod" ]]; then
   echoerr "TODO: Fill in prod details"; exit 1;
 else
   echoerr "Unknown environment '$SPRING_PROFILE_ENV' provided. Exiting..."
   exit 1
+fi
+
+# Include gfsecurity config for subscribers that need to connect to secured clusters
+TARGET_CLUSTER=`echo "$SPRING_PROFILE_ENV" | cut -d'-' -f3-`
+if [[ $TARGET_CLUSTER == "to-sso" || $TARGET_CLUSTER == "to-customer" ]]; then
+    [[ -z $SECURITY_FLAG ]] && SECURITY_FLAG='true'
 fi
 
 # BUILD
@@ -107,12 +123,13 @@ if [[ "$INPUT" == "y" ]]; then
     exit 1
   fi
 fi
+JAR_NAME=`ls -t target/$APP_NAME*.jar | cut -d'/' -f2 | head -n1`
 
 # DEPLOY
-START_COMMAND="java -Djava.security.auth.login.config=/web/secure-config/gemfire/kafka_client_jaas_plain.conf"
+START_COMMAND="java -Djava.security.auth.login.config=$KAFKA_JAAS_CONFIG"
 [[ -z $SECURITY_FLAG ]] || START_COMMAND="$START_COMMAND -DgemfireSecurityPropertyFile=$GEMFIRE_SECURITY_PROPERTIES"
 START_COMMAND="$START_COMMAND -Dspring.config.location=/web/config/"
-START_COMMAND="$START_COMMAND -Dspring.profiles.active=$SPRING_PROFILE_ENV -jar $APP_NAME*.jar"
+START_COMMAND="$START_COMMAND -Dspring.profiles.active=$SPRING_PROFILE_ENV -jar $JAR_NAME"
 START_COMMAND="$START_COMMAND --spring.cloud.stream.bindings.input.destination=$DESTINATION"
 START_COMMAND="$START_COMMAND --logging.file=$LOG_LOCATION/$DESTINATION.log"
 for host in $BRIDGE_SERVERS; do
@@ -124,7 +141,7 @@ for host in $BRIDGE_SERVERS; do
       ssh-copy-id $host
     fi
   fi
-  scp -q target/$APP_NAME*.jar $host:$DEPLOYMENT_LOCATION
+  scp -q "target/$JAR_NAME" $host:$DEPLOYMENT_LOCATION
 
   # Remove previous instances of application
   if [[ -z ADD_FLAG || "$ADD_FLAG" != "true" ]]; then
@@ -143,6 +160,8 @@ for host in $BRIDGE_SERVERS; do
       PORT=$((PORT+1))
     done
     echo "Starting app $DESTINATION on $host at port $PORT..."
-    ssh -q $host "nohup $START_COMMAND --server.port=$PORT >/dev/null 2>/dev/null </dev/null &"
+    echo "nohup $START_COMMAND --server.port=$PORT >/dev/null 2>/dev/null </dev/null &"
+    ssh -q $host "nohup $START_COMMAND --server.port=$PORT >/dev/null 2>/dev/null </dev/null &"  # input and output redirects with /dev/null needed for ssh/nohup combo
+    ssh -q $host "chown :chgadm $LOG_LOCATION/* --silent"
   done
 done
