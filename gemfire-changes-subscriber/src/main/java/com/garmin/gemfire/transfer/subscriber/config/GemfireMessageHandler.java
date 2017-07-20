@@ -34,9 +34,6 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 		String region = transportRecord.getRegion();
 		String operation = transportRecord.getOperation();
 
-		logger.debug("Received message with " + operation + " operation on Region :" + region + " for key: " + key
-				+ " with timestamp: " + messageLatestTimestamp);
-
 		LatestTimestampKey latestTimestampKey = new LatestTimestampKey(region, key);
 
 		boolean shouldProcessMessage = false;
@@ -44,7 +41,7 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 			long regionLatestTimestamp = (long) latestTimestampRegion.get(latestTimestampKey);
 
 			if (messageLatestTimestamp > regionLatestTimestamp) {
-				logger.debug("Message for Region : " + region + " with operation: " + operation + " for key: " + key
+				logger.info("Message for Region : " + region + " with operation: " + operation + " for key: " + key
 						+ " with timestamp: " + messageLatestTimestamp
 						+ "is more recent than object on region with timestamp: " + regionLatestTimestamp
 						+ ", so should be processing Message");
@@ -57,14 +54,12 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 				shouldProcessMessage = false;
 			}
 		} else {
-			logger.debug("key " + latestTimestampKey.toString()
+			logger.info("key " + latestTimestampKey.toString()
 					+ "does not exist on server, so should be processing Message");
 			latestTimestampRegion.put(latestTimestampKey, messageLatestTimestamp);
 			shouldProcessMessage = true;
 		}
 		if (shouldProcessMessage) {
-			logger.debug("processing message with key: " + latestTimestampKey.toString() + " operation: "
-					+ transportRecord.getOperation() + " messageLatestTimestamp: " + messageLatestTimestamp);
 			processMessage(latestTimestampKey, transportRecord.getObject(), transportRecord.getOperation(),
 					messageLatestTimestamp);
 		}
@@ -77,17 +72,17 @@ public class GemfireMessageHandler extends AbstractMessageHandler {
 		if (Operation.CREATE.toString().equals(operation) || Operation.PUTALL_CREATE.toString().equals(operation)
 				|| Operation.PUTALL_UPDATE.toString().equals(operation) || Operation.UPDATE.toString().equals(operation)
 				|| Operation.REPLACE.toString().equals(operation)) {
-			logger.info("performing " + operation + " operation on Region :" + latestTimestampKey.getRegion()
+			logger.debug("performing " + operation + " operation on Region :" + latestTimestampKey.getRegion()
 					+ " for key " + latestTimestampKey.getKey() + " with timestamp " + timestamp);
 			clientRegion.put(latestTimestampKey.getKey(), value, TransferConstants.UPDATE_SOURCE);
 		} else if (Operation.PUT_IF_ABSENT.toString().equals(operation)
 				&& !clientRegion.containsKey(latestTimestampKey.getKey())) {
-			logger.info("performing " + operation + " operation on Region :" + latestTimestampKey.getRegion()
+			logger.debug("performing " + operation + " operation on Region :" + latestTimestampKey.getRegion()
 					+ " for key " + latestTimestampKey.getKey() + " with timestamp " + timestamp);
 			clientRegion.put(latestTimestampKey.getKey(), value, TransferConstants.UPDATE_SOURCE);
 		} else if (Operation.REMOVEALL_DESTROY.toString().equals(operation)
 				|| Operation.DESTROY.toString().equals(operation) || (Operation.REMOVE.toString().equals(operation))) {
-			logger.info("performing " + operation + " operation on Region :" + latestTimestampKey.getRegion()
+			logger.debug("performing " + operation + " operation on Region :" + latestTimestampKey.getRegion()
 					+ " for key " + latestTimestampKey.getKey() + " with timestamp " + timestamp);
 			clientRegion.destroy(latestTimestampKey.getKey(), TransferConstants.UPDATE_SOURCE);
 		} else if (Operation.EXPIRE_DESTROY.toString().equals(operation)) {
