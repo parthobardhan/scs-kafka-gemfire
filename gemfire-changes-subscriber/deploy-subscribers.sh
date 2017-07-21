@@ -79,32 +79,32 @@ if [[ -z $SPRING_PROFILE_ENV || -z $DESTINATION || $HELP ]]; then
   exit 1
 fi
 
+# Include gfsecurity config for subscribers that need to connect to secured clusters
+TARGET_CLUSTER=`echo "$SPRING_PROFILE_ENV" | cut -d'-' -f3-`
+if [[ $TARGET_CLUSTER == "to-sso" || $TARGET_CLUSTER == "to-customer" ]]; then
+    [[ -z $SECURITY_FLAG ]] && SECURITY_FLAG='true'
+fi
+
 # Set environment specific configuration
 [[ -z $INSTANCE_COUNT ]] && INSTANCE_COUNT=1
 DEPLOYMENT_ENV=`echo "$SPRING_PROFILE_ENV" | cut -d'-' -f1`
 if [[ "$DEPLOYMENT_ENV" == "poc" || "$DEPLOYMENT_ENV" == "dev" ]]; then
   [[ -z $KAFKA_JAAS_CONFIG ]]           && KAFKA_JAAS_CONFIG="/etc/config/kafka_client_jaas_plain.conf"
-  [[ -z $GEMFIRE_SECURITY_PROPERTIES ]] && GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-dev.properties"
+  [[ -z $SECURITY_FLAG ]]               && GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-dev.properties"   || GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-dev-no-ssl.properties"
   [[ -z $BRIDGE_SERVERS ]]              && BRIDGE_SERVERS="olaxta-itwgfbridge00"
 elif [[ "$DEPLOYMENT_ENV" == "test" ]]; then
   [[ -z $KAFKA_JAAS_CONFIG ]]           && KAFKA_JAAS_CONFIG="/web/secure-config/gemfire/kafka_client_jaas_plain.conf"
-  [[ -z $GEMFIRE_SECURITY_PROPERTIES ]] && GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-test.properties"
+  [[ -z $SECURITY_FLAG ]]               && GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-test.properties"  || GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-test-no-ssl.properties"
   [[ -z $BRIDGE_SERVERS ]]              && BRIDGE_SERVERS="olaxta-itwgfbridge00"
 elif [[ "$DEPLOYMENT_ENV" == "stage" ]]; then
   [[ -z $KAFKA_JAAS_CONFIG ]]           && KAFKA_JAAS_CONFIG="/web/secure-config/gemfire/kafka_client_jaas_plain.conf"
-  [[ -z $GEMFIRE_SECURITY_PROPERTIES ]] && GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-stage.properties"
+  [[ -z $SECURITY_FLAG ]]               && GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-stage.properties" || GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-stage-no-ssl.properties"
   [[ -z $BRIDGE_SERVERS ]]              && BRIDGE_SERVERS="olaxsa-itwgfbridge00"
 elif [[ "$DEPLOYMENT_ENV" == "prod" ]]; then
   echoerr "TODO: Fill in prod details"; exit 1;
 else
   echoerr "Unknown environment '$SPRING_PROFILE_ENV' provided. Exiting..."
   exit 1
-fi
-
-# Include gfsecurity config for subscribers that need to connect to secured clusters
-TARGET_CLUSTER=`echo "$SPRING_PROFILE_ENV" | cut -d'-' -f3-`
-if [[ $TARGET_CLUSTER == "to-sso" || $TARGET_CLUSTER == "to-customer" ]]; then
-    [[ -z $SECURITY_FLAG ]] && SECURITY_FLAG='true'
 fi
 
 # BUILD
@@ -148,7 +148,7 @@ for host in $BRIDGE_SERVERS; do
     PIDS_TO_DELETE=`ssh -q $host "ps -ef | grep java | grep -v grep | grep $DESTINATION" |  tr -s ' ' | cut -d' ' -f2`
     if [[ $PIDS_TO_DELETE ]]; then
       echo "Removing `echo $PIDS_TO_DELETE | wc -w` existing processes from $host"
-      ssh -q $host "kill `echo $PIDS_TO_DELETE`"
+      ssh -q $host "kill `echo $PIDS_TO_DELETE` || sudo kill `echo $PIDS_TO_DELETE`"
     fi
   fi
 
