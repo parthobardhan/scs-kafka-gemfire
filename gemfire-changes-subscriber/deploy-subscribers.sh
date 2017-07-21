@@ -127,7 +127,7 @@ JAR_NAME=`ls -t target/$APP_NAME*.jar | cut -d'/' -f2 | head -n1`
 
 # DEPLOY
 START_COMMAND="java -Djava.security.auth.login.config=$KAFKA_JAAS_CONFIG"
-[[ -z $SECURITY_FLAG ]] || START_COMMAND="$START_COMMAND -DgemfireSecurityPropertyFile=$GEMFIRE_SECURITY_PROPERTIES"
+START_COMMAND="$START_COMMAND -DgemfireSecurityPropertyFile=$GEMFIRE_SECURITY_PROPERTIES"
 START_COMMAND="$START_COMMAND -Dspring.config.location=/web/config/"
 START_COMMAND="$START_COMMAND -Dspring.profiles.active=$SPRING_PROFILE_ENV -jar $JAR_NAME"
 START_COMMAND="$START_COMMAND --spring.cloud.stream.bindings.input.destination=$DESTINATION"
