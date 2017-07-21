@@ -89,17 +89,17 @@ fi
 [[ -z $INSTANCE_COUNT ]] && INSTANCE_COUNT=1
 DEPLOYMENT_ENV=`echo "$SPRING_PROFILE_ENV" | cut -d'-' -f1`
 if [[ "$DEPLOYMENT_ENV" == "poc" || "$DEPLOYMENT_ENV" == "dev" ]]; then
-  [[ -z $KAFKA_JAAS_CONFIG ]]           && KAFKA_JAAS_CONFIG="/etc/config/kafka_client_jaas_plain.conf"
-  [[ -z $SECURITY_FLAG ]]               && GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-dev.properties"   || GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-dev-no-ssl.properties"
-  [[ -z $BRIDGE_SERVERS ]]              && BRIDGE_SERVERS="olaxta-itwgfbridge00"
+  if [[ -z $KAFKA_JAAS_CONFIG ]]; then KAFKA_JAAS_CONFIG="/etc/config/kafka_client_jaas_plain.conf"; fi
+  if [[ -z $SECURITY_FLAG ]];     then GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-dev-no-ssl.properties"; else GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-dev.properties"; fi
+  if [[ -z $BRIDGE_SERVERS ]];    then BRIDGE_SERVERS="olaxta-itwgfbridge00"; fi
 elif [[ "$DEPLOYMENT_ENV" == "test" ]]; then
-  [[ -z $KAFKA_JAAS_CONFIG ]]           && KAFKA_JAAS_CONFIG="/web/secure-config/gemfire/kafka_client_jaas_plain.conf"
-  [[ -z $SECURITY_FLAG ]]               && GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-test.properties"  || GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-test-no-ssl.properties"
-  [[ -z $BRIDGE_SERVERS ]]              && BRIDGE_SERVERS="olaxta-itwgfbridge00"
+  if [[ -z $KAFKA_JAAS_CONFIG ]]; then KAFKA_JAAS_CONFIG="/web/secure-config/gemfire/kafka_client_jaas_plain.conf"; fi
+  if [[ -z $SECURITY_FLAG ]];     then GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-test-no-ssl.properties"; else GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-test.properties"; fi
+  if [[ -z $BRIDGE_SERVERS ]];    then BRIDGE_SERVERS="olaxta-itwgfbridge00"; fi
 elif [[ "$DEPLOYMENT_ENV" == "stage" ]]; then
-  [[ -z $KAFKA_JAAS_CONFIG ]]           && KAFKA_JAAS_CONFIG="/web/secure-config/gemfire/kafka_client_jaas_plain.conf"
-  [[ -z $SECURITY_FLAG ]]               && GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-stage.properties" || GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-stage-no-ssl.properties"
-  [[ -z $BRIDGE_SERVERS ]]              && BRIDGE_SERVERS="olaxsa-itwgfbridge00"
+  if [[ -z $KAFKA_JAAS_CONFIG ]]; then KAFKA_JAAS_CONFIG="/web/secure-config/gemfire/kafka_client_jaas_plain.conf"; fi
+  if [[ -z $SECURITY_FLAG ]];     then GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-stage-no-ssl.properties"; else GEMFIRE_SECURITY_PROPERTIES="/web/secure-config/gemfire/gfsecurity-stage.properties"; fi
+  if [[ -z $BRIDGE_SERVERS ]];    then BRIDGE_SERVERS="olaxsa-itwgfbridge00"; fi
 elif [[ "$DEPLOYMENT_ENV" == "prod" ]]; then
   echoerr "TODO: Fill in prod details"; exit 1;
 else
