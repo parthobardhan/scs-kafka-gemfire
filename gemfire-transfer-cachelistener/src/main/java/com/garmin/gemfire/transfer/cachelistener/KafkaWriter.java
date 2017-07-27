@@ -30,6 +30,7 @@ import com.gemstone.gemfire.cache.util.CacheListenerAdapter;
 import com.gemstone.gemfire.internal.cache.EntryEventImpl;
 import com.gemstone.gemfire.internal.cache.versions.VersionTag;
 
+import kafka.log.Log;
 import kafka.utils.ZkUtils;
 
 public class KafkaWriter extends CacheListenerAdapter implements Declarable {
@@ -84,24 +85,48 @@ public class KafkaWriter extends CacheListenerAdapter implements Declarable {
 	}
 
 	private void captureEvent(EntryEvent event) {
-		EntryEventImpl entryEventImpl = (EntryEventImpl) event;
-		VersionTag tag = entryEventImpl.getVersionTag();
-		long eventTimestamp = tag.getVersionTimeStamp();
-		long eventRegionVersion = tag.getRegionVersion();
+		if (!event.getKey().toString().startsWith(CONST_MONITORING)) {
+			LOGGER.debug("Received entry event from region: " + event.getRegion().getName() + " with key: "
+					+ event.getKey().toString() + " having operation: " + event.getOperation());
+		}
+
+		long eventTimestamp = 0l;
+		long eventRegionVersion = 0l;
+		try {
+			EntryEventImpl entryEventImpl = (EntryEventImpl) event;
+			VersionTag tag = entryEventImpl.getVersionTag();
+			eventTimestamp = tag.getVersionTimeStamp();
+			eventRegionVersion = tag.getRegionVersion();
+		} catch (Exception e) {
+			LOGGER.error("Error while getting timestamp and regionVerion from EntryEventImpl");
+			e.printStackTrace();
+		}
 
 		if (!verifyEvent(event)) {
 			return;
 		}
 
-		Cache cache = CacheFactory.getAnyInstance();
-		Region latestTimestampRegion = cache.getRegion(LATEST_TIMESTAMP_REGION);
-		LatestTimestampKey latestTimestampKey = new LatestTimestampKey(event.getRegion().getName(), event.getKey());
-		String topicName = event.getRegion().getName() + "-" + configData.getValue(GEMFIRE_CLUSTER_NAME);
-		String region = event.getRegion().getName();
-		Object key = event.getKey();
-		String keyType = key.getClass().getName();
-		Object obj = event.getNewValue();
-		String objType = obj != null ? obj.getClass().getName() : "null";
+		Region latestTimestampRegion = null;
+		String topicName = "";
+		String region = "";
+		Object key = null;
+		String keyType = null;
+		Object obj = null;
+		String objType = "";
+		try {
+			Cache cache = CacheFactory.getAnyInstance();
+			latestTimestampRegion = cache.getRegion(LATEST_TIMESTAMP_REGION);
+			LatestTimestampKey latestTimestampKey = new LatestTimestampKey(event.getRegion().getName(), event.getKey());
+			topicName = event.getRegion().getName() + "-" + configData.getValue(GEMFIRE_CLUSTER_NAME);
+			region = event.getRegion().getName();
+			key = event.getKey();
+			keyType = key.getClass().getName();
+			obj = event.getNewValue();
+			objType = obj != null ? obj.getClass().getName() : "null";
+		} catch (Exception e) {
+			LOGGER.error("Error while instantiating cacheinstance or while getting event details");
+			e.printStackTrace();
+		}
 
 		String jsonTransport;
 		try {
