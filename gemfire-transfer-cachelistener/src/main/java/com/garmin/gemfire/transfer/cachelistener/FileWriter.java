@@ -39,9 +39,9 @@ public class FileWriter extends CacheListenerAdapter implements Declarable {
 
 	private void captureEvent(EntryEvent event) {
 		
-		if (event.isCallbackArgumentAvailable()) {
-			if (event.getCallbackArgument().toString().equals("SOURCE: KAFKA")) return;
-		}
+//		if (event.isCallbackArgumentAvailable()) {
+//			if (event.getCallbackArgument().toString().equals("SOURCE: KAFKA")) return;
+//		}
 		
 		if (event.getKey().toString().startsWith("MONITORING-")) return;
 		// auto.create.topics.enable to create topics 
@@ -49,6 +49,7 @@ public class FileWriter extends CacheListenerAdapter implements Declarable {
 		String region= event.getRegion().getName();
 		Long now = System.currentTimeMillis();
 		EntryEventImpl eei = (EntryEventImpl)event;
+		now = eei.getVersionTag().getVersionTimeStamp();
 		Long regionVersion = eei.getVersionTag().getRegionVersion();
 		String jsonTransport;
 		try {

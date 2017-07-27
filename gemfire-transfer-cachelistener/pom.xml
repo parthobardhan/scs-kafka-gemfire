@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.garmin.gemfire.transfer</groupId>
 		<artifactId>gemfire-transfer-parent</artifactId>
-		<version>1.0.0</version>
+		<version>1.0.1</version>
 	</parent>
 
 	<artifactId>gemfire-transfer-cachelistener</artifactId>
@@ -30,7 +30,6 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.5</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -48,15 +47,20 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.2.0</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
 		
 		<!-- gemfire dependencies -->
 		<dependency>
 			<groupId>com.gemstone.gemfire</groupId>
 			<artifactId>gemfire</artifactId>
-			<version>8.2.0</version>
+			<scope>provided</scope>
 		</dependency>
 		
 		<!-- Kafka dependencies -->
@@ -69,7 +73,6 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

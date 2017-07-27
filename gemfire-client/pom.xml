@@ -6,11 +6,11 @@
 	<parent>
 		<groupId>com.garmin.gemfire.transfer</groupId>
 		<artifactId>gemfire-transfer-parent</artifactId>
-		<version>1.0.0</version>
+		<version>1.0.1</version>
 	</parent>
 	<groupId>com.garmin.gemfire.transfer</groupId>
 	<artifactId>gemfire-client</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<name>gemfire-client</name>
 	<url>http://maven.apache.org</url>
 	<properties>

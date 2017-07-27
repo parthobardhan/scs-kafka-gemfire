@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.garmin.gemfire.transfer</groupId>
 		<artifactId>gemfire-transfer-parent</artifactId>
-		<version>1.0.0</version>
+		<version>1.0.1</version>
 	</parent>
 	<artifactId>gemfire-transfer-commons</artifactId>
 	<name>gemfire-transfer-commons</name>
@@ -20,6 +20,7 @@
 		<dependency>
 			<groupId>com.gemstone.gemfire</groupId>
 			<artifactId>gemfire</artifactId>
+			<scope>provided</scope>
 		</dependency>
 	
 		<dependency>
